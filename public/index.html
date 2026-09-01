@@ -44,7 +44,6 @@
         
         .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; border-color: #fde047; }
         .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
-        .msg-system { background: #e0f2fe; color: #0369a1; align-self: center; border-radius: 8px; font-size: 12px; text-align: center; border: 1px solid #bae6fd; max-width: 90%; }
         
         .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; }
 
@@ -52,6 +51,9 @@
         .replying-banner { padding: 8px 15px; background: #eff6ff; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
+        
+        /* بنر قفل گروه به جای کادر پیام */
+        .locked-banner { padding: 15px; background: #fef2f2; color: #991b1b; text-align: center; font-size: 13px; font-weight: bold; border-top: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; gap: 6px; }
         
         .verified-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #0ea5e9; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
         
@@ -115,34 +117,38 @@
 
             <div class="messages-box" id="messages-box"></div>
 
-            <div class="input-container">
+            <!-- کادر ارسال پیام یا بنر قفل گروه -->
+            <div class="input-container" id="input-container-box">
                 <div id="replying-banner" class="replying-banner hidden">
                     <div><span style="color:var(--accent)">در حال پاسخ به:</span> <span id="reply-text-preview" style="font-weight:bold;"></span></div>
                     <span onclick="cancelReply()" style="cursor:pointer; color:#ef4444; font-weight:bold;">✖</span>
                 </div>
-                <div class="input-bar">
+                <div class="input-bar" id="active-input-bar">
                     <input type="file" id="file-input" style="display:none" onchange="sendFile(this)">
                     <button style="width:40px; height:40px; margin:0; background:#e2e8f0; color:var(--text); border-radius:10px; border:none;" onclick="document.getElementById('file-input').click()">📷</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
                     <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
                 </div>
+                <div id="locked-group-banner" class="locked-banner hidden">
+                    قفل گروه فعال است <span style="font-size: 16px;">🔒</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- مودال ویرایش پروفایل و آکون کاربر -->
+    <!-- مودال پروفایل -->
     <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
-            <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل و آیکون</h3>
+            <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل</h3>
             <input type="text" id="edit-name-input" placeholder="نام جدید شما">
-            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس پروفایل (آیکون):</p>
+            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس پروفایل:</p>
             <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="previewProfileAvatar(event)">
             <button onclick="updateProfileName()">ذخیره تغییرات</button>
             <button style="background:#cbd5e1; color:#0f172a;" onclick="document.getElementById('profile-modal').classList.add('hidden')">انصراف</button>
         </div>
     </div>
 
-    <!-- مودال تنظیمات گروه و قفل گروه -->
+    <!-- مودال تنظیمات گروه -->
     <div id="group-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">تنظیمات گروه</h3>
@@ -226,7 +232,7 @@
             if(currentUser.avatar) {
                 avatarEl.innerHTML = `<img src="${currentUser.avatar}">`;
             } else {
-                avatarEl.innerText = currentUser.name.charAt(0).toUpperCase();
+                avatarEl.innerHTML = currentUser.name.charAt(0).toUpperCase();
             }
         }
 
@@ -273,11 +279,10 @@
         socket.on('user_chats_loaded', (chats) => {
             chatsData = chats;
             renderChatList(chatsData);
-            // اگر چت فعلی وجود نداشت یا پاک شده بود روی اولین چت بروو
-            if(!chatsData.find(c => c.id === activeChatId) && chatsData.length > 0) {
-                selectRoom(chatsData[0].id);
-            } else {
+            if(chatsData.find(c => c.id === activeChatId)) {
                 selectRoom(activeChatId);
+            } else if(chatsData.length > 0) {
+                selectRoom(chatsData[0].id);
             }
         });
 
@@ -307,8 +312,24 @@
                 } else {
                     document.getElementById('group-admin-actions').classList.add('hidden');
                 }
+                updateGroupLockUI();
             }
             socket.emit('join_room', id);
+        }
+
+        function updateGroupLockUI() {
+            if(!currentChatObj) return;
+            const isLocked = currentChatObj.isLocked;
+            const isOwner = currentUser.isOwner;
+
+            if(isLocked && !isOwner) {
+                document.getElementById('active-input-bar').classList.add('hidden');
+                document.getElementById('locked-group-banner').classList.remove('hidden');
+                document.getElementById('replying-banner').classList.add('hidden');
+            } else {
+                document.getElementById('active-input-bar').classList.remove('hidden');
+                document.getElementById('locked-group-banner').classList.add('hidden');
+            }
         }
 
         function openEditGroupModal() {
@@ -347,7 +368,13 @@
             if(idx !== -1) {
                 chatsData[idx] = updatedChat;
                 renderChatList(chatsData);
-                if(activeChatId === updatedChat.id) selectRoom(updatedChat.id);
+                if(activeChatId === updatedChat.id) {
+                    currentChatObj = updatedChat;
+                    let badge = updatedChat.isVerified ? '<span class="verified-badge">✓</span>' : '';
+                    let avatarContent = updatedChat.avatar ? `<img src="${updatedChat.avatar}">` : updatedChat.name.charAt(0);
+                    document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${avatarContent}</div> ${updatedChat.name} ${badge}`;
+                    updateGroupLockUI();
+                }
             }
         });
 
@@ -419,13 +446,6 @@
 
         function appendMessage(msg) {
             const box = document.getElementById('messages-box');
-            
-            if(msg.type === 'system') {
-                box.innerHTML += `<div id="${msg.id}" class="message-bubble msg-system">🔒 ${escapeHtml(msg.content)}</div>`;
-                box.scrollTop = box.scrollHeight;
-                return;
-            }
-
             let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
             let contentHtml = msg.type === 'image' ? `<img src="${msg.content}" style="max-width:100%; width:180px; border-radius:8px; display:block; margin-top:4px;">` : escapeHtml(msg.content);
             
