@@ -52,13 +52,13 @@
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
-        /* بنر قفل گروه به جای کادر پیام */
-        .locked-banner { padding: 15px; background: #fef2f2; color: #991b1b; text-align: center; font-size: 13px; font-weight: bold; border-top: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        /* بنر قفل گروه همراه با عکس کوچک فرستاده شده در کنار متن */
+        .locked-banner { padding: 14px; background: #fef2f2; color: #991b1b; text-align: center; font-size: 13px; font-weight: bold; border-top: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .locked-banner img { width: 22px; height: 22px; object-fit: cover; border-radius: 50%; vertical-align: middle; display: inline-block; }
         
         .verified-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #0ea5e9; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
         
-        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; overflow: hidden; }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; font-size: 16px; }
         
         .msg-actions { position: absolute; left: 10px; top: 5px; display: none; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .message-bubble:hover .msg-actions { display: flex; }
@@ -117,44 +117,37 @@
 
             <div class="messages-box" id="messages-box"></div>
 
-            <!-- کادر ارسال پیام یا بنر قفل گروه -->
             <div class="input-container" id="input-container-box">
                 <div id="replying-banner" class="replying-banner hidden">
                     <div><span style="color:var(--accent)">در حال پاسخ به:</span> <span id="reply-text-preview" style="font-weight:bold;"></span></div>
                     <span onclick="cancelReply()" style="cursor:pointer; color:#ef4444; font-weight:bold;">✖</span>
                 </div>
                 <div class="input-bar" id="active-input-bar">
-                    <input type="file" id="file-input" style="display:none" onchange="sendFile(this)">
-                    <button style="width:40px; height:40px; margin:0; background:#e2e8f0; color:var(--text); border-radius:10px; border:none;" onclick="document.getElementById('file-input').click()">📷</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
                     <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
                 </div>
                 <div id="locked-group-banner" class="locked-banner hidden">
-                    قفل گروه فعال است <span style="font-size: 16px;">🔒</span>
+                    قفل گروه فعال است <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==" alt="icon">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- مودال پروفایل -->
+    <!-- مودال پروفایل (بدون عکس) -->
     <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل</h3>
             <input type="text" id="edit-name-input" placeholder="نام جدید شما">
-            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس پروفایل:</p>
-            <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="previewProfileAvatar(event)">
             <button onclick="updateProfileName()">ذخیره تغییرات</button>
             <button style="background:#cbd5e1; color:#0f172a;" onclick="document.getElementById('profile-modal').classList.add('hidden')">انصراف</button>
         </div>
     </div>
 
-    <!-- مودال تنظیمات گروه -->
+    <!-- مودال تنظیمات گروه (بدون عکس) -->
     <div id="group-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">تنظیمات گروه</h3>
             <input type="text" id="edit-group-name-input" placeholder="نام جدید گروه">
-            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس گروه:</p>
-            <input type="file" id="edit-group-avatar-file" accept="image/*" onchange="previewGroupAvatar(event)">
             <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0; justify-content: right; font-size: 14px;">
                 <label for="lock-group-checkbox">قفل گروه (فقط مالک پیام دهد):</label>
                 <input type="checkbox" id="lock-group-checkbox" style="width: 20px; height: 20px; margin:0;">
@@ -172,8 +165,6 @@
         let currentChatObj = null;
         let chatsData = [];
         let replyingToMsg = null;
-        let base64GroupAvatar = '';
-        let base64ProfileAvatar = '';
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
@@ -227,38 +218,18 @@
         function updateUserUI() {
             let badge = (currentUser.isOwner || currentUser.isVerified) ? '<span class="verified-badge">✓</span>' : '';
             document.getElementById('current-user-display').innerHTML = `${currentUser.name} ${badge} <br><small style="color:var(--text-sec)">@${currentUser.username}</small>`;
-            
-            const avatarEl = document.getElementById('sidebar-avatar');
-            if(currentUser.avatar) {
-                avatarEl.innerHTML = `<img src="${currentUser.avatar}">`;
-            } else {
-                avatarEl.innerHTML = currentUser.name.charAt(0).toUpperCase();
-            }
+            document.getElementById('sidebar-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
         }
 
         function openEditProfileModal() {
             document.getElementById('edit-name-input').value = currentUser.name;
-            base64ProfileAvatar = '';
             document.getElementById('profile-modal').classList.remove('hidden');
-        }
-
-        function previewProfileAvatar(event) {
-            const file = event.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = e => { base64ProfileAvatar = e.target.result; };
-                reader.readAsDataURL(file);
-            }
         }
 
         function updateProfileName() {
             const newName = document.getElementById('edit-name-input').value.trim();
             if(newName) {
-                socket.emit('update_profile', { 
-                    username: currentUser.username, 
-                    newName, 
-                    avatar: base64ProfileAvatar !== '' ? base64ProfileAvatar : currentUser.avatar 
-                });
+                socket.emit('update_profile', { username: currentUser.username, newName });
                 document.getElementById('profile-modal').classList.add('hidden');
             }
         }
@@ -273,7 +244,7 @@
 
         function openCreateRoomModal() {
             const roomName = prompt('نام گروه جدید را وارد کنید:');
-            if(roomName) socket.emit('create_room', { name: roomName, admin: currentUser.username, avatar: '' });
+            if(roomName) socket.emit('create_room', { name: roomName, admin: currentUser.username });
         }
 
         socket.on('user_chats_loaded', (chats) => {
@@ -291,9 +262,8 @@
             list.innerHTML = '';
             chats.forEach(chat => {
                 let badge = chat.isVerified ? '<span class="verified-badge">✓</span>' : '';
-                let avatarContent = chat.avatar ? `<img src="${chat.avatar}">` : chat.name.charAt(0);
                 list.innerHTML += `<div class="chat-item" onclick="selectRoom('${chat.id}')">
-                    <div class="avatar-circle">${avatarContent}</div>
+                    <div class="avatar-circle">${chat.name.charAt(0)}</div>
                     <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${chat.name}</b> ${badge}<br><small style="color:var(--text-sec)">گروه عمومی</small></div>
                 </div>`;
             });
@@ -304,8 +274,7 @@
             currentChatObj = chatsData.find(c => c.id === id);
             if(currentChatObj) {
                 let badge = currentChatObj.isVerified ? '<span class="verified-badge">✓</span>' : '';
-                let avatarContent = currentChatObj.avatar ? `<img src="${currentChatObj.avatar}">` : currentChatObj.name.charAt(0);
-                document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${avatarContent}</div> ${currentChatObj.name} ${badge}`;
+                document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${currentChatObj.name.charAt(0)}</div> ${currentChatObj.name} ${badge}`;
                 
                 if(currentUser.isOwner || currentChatObj.admin === currentUser.username) {
                     document.getElementById('group-admin-actions').classList.remove('hidden');
@@ -336,17 +305,7 @@
             if(!currentChatObj) return;
             document.getElementById('edit-group-name-input').value = currentChatObj.name;
             document.getElementById('lock-group-checkbox').checked = currentChatObj.isLocked || false;
-            base64GroupAvatar = '';
             document.getElementById('group-modal').classList.remove('hidden');
-        }
-
-        function previewGroupAvatar(event) {
-            const file = event.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = e => { base64GroupAvatar = e.target.result; };
-                reader.readAsDataURL(file);
-            }
         }
 
         function saveGroupSettings() {
@@ -356,7 +315,6 @@
                 socket.emit('update_group', { 
                     chatId: currentChatObj.id, 
                     name: newName, 
-                    avatar: base64GroupAvatar !== '' ? base64GroupAvatar : currentChatObj.avatar,
                     isLocked: isLocked 
                 });
                 document.getElementById('group-modal').classList.add('hidden');
@@ -371,8 +329,7 @@
                 if(activeChatId === updatedChat.id) {
                     currentChatObj = updatedChat;
                     let badge = updatedChat.isVerified ? '<span class="verified-badge">✓</span>' : '';
-                    let avatarContent = updatedChat.avatar ? `<img src="${updatedChat.avatar}">` : updatedChat.name.charAt(0);
-                    document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${avatarContent}</div> ${updatedChat.name} ${badge}`;
+                    document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${updatedChat.name.charAt(0)}</div> ${updatedChat.name} ${badge}`;
                     updateGroupLockUI();
                 }
             }
@@ -385,29 +342,10 @@
                 chatId: activeChatId, 
                 sender: currentUser.username, 
                 content: text, 
-                type: 'text',
                 replyTo: replyingToMsg 
             });
             document.getElementById('msg-input').value = '';
             cancelReply();
-        }
-
-        function sendFile(input) {
-            const file = input.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    socket.emit('send_message', { 
-                        chatId: activeChatId, 
-                        sender: currentUser.username, 
-                        content: e.target.result, 
-                        type: 'image',
-                        replyTo: replyingToMsg 
-                    });
-                    cancelReply();
-                };
-                reader.readAsDataURL(file);
-            }
         }
 
         function setReply(msgId, senderName, content) {
@@ -447,7 +385,7 @@
         function appendMessage(msg) {
             const box = document.getElementById('messages-box');
             let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
-            let contentHtml = msg.type === 'image' ? `<img src="${msg.content}" style="max-width:100%; width:180px; border-radius:8px; display:block; margin-top:4px;">` : escapeHtml(msg.content);
+            let contentHtml = escapeHtml(msg.content);
             
             let isOwnerMsg = (msg.sender === 'kia12' || msg.sender === 'kiya12' || msg.isVerified);
             let bubbleClass = isOwnerMsg ? 'msg-owner' : 'msg-other';
