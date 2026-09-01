@@ -13,8 +13,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const db = {
     users: [
-        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', isVerified: true, isOwner: true },
-        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', isVerified: true, isOwner: true }
+        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true },
+        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true }
     ],
     chats: [
         { id: 'main_group', type: 'group', name: 'گروه اصلی مالک', avatar: '', admin: 'kia12', isVerified: true, isLocked: false }
@@ -35,6 +35,7 @@ io.on('connection', (socket) => {
                 username: data.username,
                 password: data.password,
                 name: data.name,
+                avatar: data.avatar || '',
                 isVerified: false,
                 isOwner: data.username === 'kia12' || data.username === 'kiya12'
             };
@@ -55,7 +56,8 @@ io.on('connection', (socket) => {
     socket.on('update_profile', (data) => {
         const user = db.users.find(u => u.username === data.username);
         if (user) {
-            user.name = data.newName;
+            if (data.newName) user.name = data.newName;
+            if (data.avatar !== undefined) user.avatar = data.avatar;
             socket.emit('profile_updated', user);
         }
     });
@@ -73,7 +75,7 @@ io.on('connection', (socket) => {
             id: roomId,
             type: 'group',
             name: data.name,
-            avatar: '',
+            avatar: data.avatar || '',
             admin: data.admin,
             isVerified: isOwnerOrVerified,
             isLocked: false
@@ -81,16 +83,16 @@ io.on('connection', (socket) => {
         db.chats.push(newRoom);
         db.messages[roomId] = [];
         
-        io.emit('room_created', newRoom);
+        // ارسال لیست جدید گروه‌ها به همه کاربران آنلاین تا در همه گوشی‌ها ظاهر شود
+        io.emit('user_chats_loaded', db.chats);
     });
 
     socket.on('update_group', (data) => {
         const chat = db.chats.find(c => c.id === data.chatId);
         if (chat) {
             if (data.name) chat.name = data.name;
-            if (data.avatar !== undefined && data.avatar !== '') chat.avatar = data.avatar;
+            if (data.avatar !== undefined) chat.avatar = data.avatar;
             
-            // بررسی دستور قفل گروه
             if (data.isLocked !== undefined) {
                 chat.isLocked = data.isLocked;
                 const lockMsg = {
@@ -107,6 +109,7 @@ io.on('connection', (socket) => {
             }
 
             io.emit('group_updated', chat);
+            io.emit('user_chats_loaded', db.chats);
         }
     });
 
@@ -115,7 +118,6 @@ io.on('connection', (socket) => {
         const chat = db.chats.find(c => c.id === chatId);
         const senderUser = db.users.find(u => u.username === sender);
 
-        // اگر گروه قفل باشد، فقط مالک می‌تواند پیام بفرستد
         if (chat && chat.isLocked && senderUser && !senderUser.isOwner) {
             socket.emit('auth_error', 'گروه توسط مالک قفل شده است و فقط مالک می‌تواند پیام ارسال کند.');
             return;
@@ -146,7 +148,6 @@ io.on('connection', (socket) => {
             const index = messages.findIndex(m => m.id === msgId);
             if (index !== -1) {
                 const user = db.users.find(u => u.username === username);
-                // فقط فرستنده خود پیام یا مالک اجازه حذف دارند
                 if (messages[index].sender === username || (user && user.isOwner)) {
                     messages.splice(index, 1);
                     io.to(chatId).emit('message_deleted', { chatId, msgId });
