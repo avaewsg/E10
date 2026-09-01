@@ -77,12 +77,16 @@
     <div id="app-container" class="hidden">
         <div class="sidebar">
             <div class="sidebar-header">
-                <div>
-                    <h3 id="current-user-display" style="margin: 0; color: #a78bfa; font-size: 15px;"></h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <!-- دکمه خروج / بازگشت به صفحه ورود در گوشه بالای پنل -->
+                    <button title="خروج از حساب" style="width: auto; padding: 6px 10px; margin:0; background:#ef4444; font-size: 12px;" onclick="logout()">🚪 خروج</button>
+                    <div>
+                        <h3 id="current-user-display" style="margin: 0; color: #a78bfa; font-size: 14px;"></h3>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 5px;">
-                    <button id="owner-btn" class="hidden" style="width: auto; padding: 6px 10px; margin:0; background:#0284c7;" onclick="openOwnerPanel()">👑 مالک</button>
-                    <button style="width: auto; padding: 6px 10px; margin:0;" onclick="openCreateRoomModal()">+ گروه/چنل</button>
+                <div style="display: flex; gap: 4px;">
+                    <button id="owner-btn" class="hidden" style="width: auto; padding: 6px 8px; margin:0; background:#0284c7; font-size:12px;" onclick="openOwnerPanel()">👑 مالک</button>
+                    <button style="width: auto; padding: 6px 8px; margin:0; font-size:12px;" onclick="openCreateRoomModal()">+ گروه</button>
                 </div>
             </div>
             <div style="padding: 10px;">
@@ -111,7 +115,6 @@
         let activeChatId = null;
         let base64Avatar = '';
 
-        // مدیریت ذخیره نشست ۲ روزه با localStorage
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
             const loginTime = localStorage.getItem('e10_time');
@@ -132,7 +135,6 @@
             document.getElementById('reg-form').classList.toggle('hidden', !isReg);
         }
 
-        // خواندن فایل عکس پروفایل و تبدیل به Base64
         function previewAvatar(event) {
             const file = event.target.files[0];
             if (file) {
@@ -161,6 +163,12 @@
             socket.emit('login', { username, password });
         }
 
+        // تابع خروج از حساب کاربری
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
         socket.on('auth_success', (user) => {
             currentUser = user;
             localStorage.setItem('e10_user', JSON.stringify(user));
@@ -178,7 +186,6 @@
             let badge = currentUser.isVerified ? '<span class="verified-badge">✓</span>' : '';
             document.getElementById('current-user-display').innerHTML = `${currentUser.name} ${badge} <br><small style="color:var(--text-sec)">@${currentUser.username}</small>`;
             
-            // اگر کاربر مالک (kia12) باشد، دکمه مدیریت نمایش داده می‌شود
             if (currentUser.username === 'kia12' || currentUser.isOwner) {
                 document.getElementById('owner-btn').classList.remove('hidden');
             }
@@ -210,9 +217,8 @@
             });
         });
 
-        // پنل مالک برای اعطای تیک آبی
         function openOwnerPanel() {
-            const target = prompt('یوزرمورد نظر (آیدی بدون @) جهت اعطای/گرفتن تیک آبی را وارد کنید:');
+            const target = prompt('یوزر مورد نظر (آیدی بدون @) جهت اعطای/گرفتن تیک آبی را وارد کنید:');
             if(target) {
                 socket.emit('toggle_verified', { targetUsername: target, adminUsername: currentUser.username });
             }
