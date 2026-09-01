@@ -14,16 +14,14 @@
             --text-sec: #6b7280; 
             --border-color: #e5e7eb;
             --chat-bg: #f9fafb;
-            --bubble-my: #2563eb;
-            --bubble-my-text: #ffffff;
-            --bubble-other: #ffffff;
-            --bubble-other-text: #1f2937;
+            --bubble-yellow: #fef08a; 
+            --bubble-text: #1f2937;
         }
         body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
         
         .auth-box { background: var(--panel-bg); padding: 30px; border-radius: 16px; width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--border-color); }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #f9fafb; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text); box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #f9fafb; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text); box-sizing: border-box; }
         button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background: var(--accent-hover); }
 
@@ -31,25 +29,24 @@
         .sidebar { width: 360px; background: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .chat-item { padding: 15px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
         .chat-item:hover { background: rgba(37, 99, 235, 0.05); }
         
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); }
-        .chat-header { padding: 15px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .chat-header { padding: 15px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 5px; }
         .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .message-bubble { max-width: 60%; padding: 10px 15px; border-radius: 12px; word-break: break-word; font-size: 14px; background: var(--bubble-other); color: var(--bubble-other-text); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .message-bubble.my { background: var(--bubble-my); color: var(--bubble-my-text); align-self: flex-end; }
+        
+        .message-bubble { max-width: 60%; padding: 12px 15px; border-radius: 12px; word-break: break-word; font-size: 14px; background: var(--bubble-yellow); color: var(--bubble-text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); align-self: flex-start; border: 1px solid #fde047; }
         
         .input-bar { padding: 15px; background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
-        /* تیک آبی شیک و استاندارد */
         .verified-badge { 
             display: inline-flex; 
             align-items: center; 
             justify-content: center; 
-            width: 15px; 
-            height: 15px; 
+            width: 16px; 
+            height: 16px; 
             background: #0ea5e9; 
             color: #ffffff; 
             border-radius: 50%; 
@@ -87,30 +84,22 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <button title="خروج از حساب" style="width: auto; padding: 6px 10px; margin:0; background:#ef4444; font-size: 12px;" onclick="logout()">🚪 خروج</button>
+                    <button title="خروج" style="width: auto; padding: 6px 10px; margin:0; background:#ef4444; font-size: 12px;" onclick="logout()">🚪 خروج</button>
                     <div>
                         <h3 id="current-user-display" style="margin: 0; color: var(--accent); font-size: 14px;"></h3>
                     </div>
                 </div>
-                <div style="display: flex; gap: 4px;">
-                    <button id="owner-btn" class="hidden" style="width: auto; padding: 6px 8px; margin:0; background:#0284c7; font-size:12px;" onclick="openOwnerPanel()">👑 مالک</button>
-                    <button style="width: auto; padding: 6px 8px; margin:0; font-size:12px;" onclick="openCreateRoomModal()">+ گروه</button>
-                </div>
+                <button style="width: auto; padding: 6px 10px; margin:0; font-size: 12px;" onclick="openCreateRoomModal()">+ ساخت گروه</button>
             </div>
-            <div style="padding: 10px;">
-                <input type="text" id="search-box" placeholder="جستجوی آیدی یا کانال..." oninput="searchTarget(this.value)">
-            </div>
-            <div class="chat-list" id="chat-list">
-                <div style="text-align:center; color:var(--text-sec); padding:20px; font-size:13px;">برای شروع آیدی کسی را جستجو کنید</div>
-            </div>
+            <div class="chat-list" id="chat-list"></div>
         </div>
         <div class="chat-area">
-            <div class="chat-header" id="active-chat-title">یک گفتگو را انتخاب کنید</div>
+            <div class="chat-header" id="active-chat-container">گروه اصلی</div>
             <div class="messages-box" id="messages-box"></div>
-            <div class="input-bar" id="input-bar-area" style="display: none;">
+            <div class="input-bar" id="input-bar-area">
                 <input type="file" id="file-input" style="display:none" onchange="sendFile(this)">
                 <button style="width:40px; margin:0; background:#e5e7eb; color:var(--text);" onclick="document.getElementById('file-input').click()">📷</button>
-                <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <input type="text" id="msg-input" placeholder="پیام خود را در گروه بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
                 <button style="width:80px; margin:0;" onclick="sendMessage()">ارسال</button>
             </div>
         </div>
@@ -120,21 +109,15 @@
     <script>
         const socket = io();
         let currentUser = null;
-        let activeChatId = null;
+        let activeChatId = 'main_group';
+        let chatsData = [];
         let base64Avatar = '';
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
-            const loginTime = localStorage.getItem('e10_time');
-            if (savedUser && loginTime) {
-                const twoDays = 2 * 24 * 60 * 60 * 1000;
-                if (Date.now() - parseInt(loginTime) < twoDays) {
-                    currentUser = JSON.parse(savedUser);
-                    enterApp();
-                } else {
-                    alert('نشست ۲ روزه شما منقضی شد. لطفاً رمز عبور را مجدداً وارد کنید.');
-                    localStorage.clear();
-                }
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                enterApp();
             }
         };
 
@@ -179,124 +162,79 @@
         socket.on('auth_success', (user) => {
             currentUser = user;
             localStorage.setItem('e10_user', JSON.stringify(user));
-            localStorage.setItem('e10_time', Date.now().toString());
             enterApp();
         });
 
         socket.on('auth_error', (err) => alert(err));
-        socket.on('password_expired', (err) => alert(err));
 
         function enterApp() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
             
-            let badge = currentUser.isVerified ? '<span class="verified-badge">✓</span>' : '';
+            let badge = (currentUser.isOwner || currentUser.isVerified) ? '<span class="verified-badge">✓</span>' : '';
             document.getElementById('current-user-display').innerHTML = `${currentUser.name} ${badge} <br><small style="color:var(--text-sec)">@${currentUser.username}</small>`;
             
-            if (currentUser.username === 'kia12' || currentUser.username === 'kiya12' || currentUser.isOwner) {
-                document.getElementById('owner-btn').classList.remove('hidden');
-            }
-
             socket.emit('get_user_chats', currentUser.username);
-        }
-
-        function searchTarget(query) {
-            if(query.length > 0) socket.emit('search', query);
-            else socket.emit('get_user_chats', currentUser.username);
-        }
-
-        socket.on('search_results', (results) => {
-            renderChatList(results);
-        });
-
-        socket.on('user_chats_loaded', (chats) => {
-            renderChatList(chats);
-        });
-
-        function renderChatList(items) {
-            const list = document.getElementById('chat-list');
-            list.innerHTML = '';
-            if(items.length === 0) {
-                list.innerHTML = `<div style="text-align:center; color:var(--text-sec); padding:20px; font-size:13px;">گفتگویی وجود ندارد</div>`;
-                return;
-            }
-
-            items.forEach(item => {
-                let badge = item.isVerified ? '<span class="verified-badge">✓</span>' : '';
-                if(item.type === 'user') {
-                    if(item.username !== currentUser.username) {
-                        let avatarImg = item.avatar ? `<img src="${item.avatar}" width="36" height="36" style="border-radius:50%; object-fit:cover;">` : `<div style="width:36px;height:36px;background:#e5e7eb;border-radius:50%;display:flex;align-items:center;justify-content:center;">👤</div>`;
-                        list.innerHTML += `<div class="chat-item" onclick="startPv('${item.username}', '${item.name}')">
-                            ${avatarImg}
-                            <div><b>${item.name}</b> ${badge}<br><small style="color:var(--text-sec)">@${item.username}</small></div>
-                        </div>`;
-                    }
-                } else if(item.type === 'pv') {
-                    const parts = item.id.replace('pv_', '').split('_');
-                    const targetUsername = parts[0] === currentUser.username ? parts[1] : parts[0];
-                    list.innerHTML += `<div class="chat-item" onclick="selectRoom('${item.id}', '${item.name}', 'pv')">
-                        <div style="width:36px;height:36px;background:#e5e7eb;border-radius:50%;display:flex;align-items:center;justify-content:center;">👤</div>
-                        <div><b>پی‌وی: @${targetUsername}</b><br><small style="color:var(--text-sec)">گفتگوی خصوصی</small></div>
-                    </div>`;
-                } else {
-                    list.innerHTML += `<div class="chat-item" onclick="selectRoom('${item.id}', '${item.name}', '${item.type}')">
-                        <div style="width:36px;height:36px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;">📢</div>
-                        <div><b>${item.name}</b> ${badge}<br><small style="color:var(--text-sec)">${item.type === 'group' ? 'گروه' : 'کانال'}</small></div>
-                    </div>`;
-                }
-            });
-        }
-
-        function openOwnerPanel() {
-            const target = prompt('یوزر مورد نظر یا آیدی گروه جهت اعطای/گرفتن تیک آبی را وارد کنید:');
-            if(target) {
-                socket.emit('toggle_verified', { targetUsername: target, adminUsername: currentUser.username });
-            }
-        }
-
-        socket.on('notification', (msg) => alert(msg));
-
-        function startPv(targetUsername, targetName) {
-            const sortedUsers = [currentUser.username, targetUsername].sort();
-            const pvChatId = `pv_${sortedUsers[0]}_${sortedUsers[1]}`;
-            selectRoom(pvChatId, `پی‌وی: ${targetName} (@${targetUsername})`, 'pv');
+            socket.emit('join_room', activeChatId);
         }
 
         function openCreateRoomModal() {
-            const name = prompt('نام گروه یا کانال را وارد کنید:');
-            const type = confirm('برای ساخت گروه تایید و برای کانال لغو را بزنید') ? 'group' : 'channel';
-            if(name) {
-                socket.emit('create_room', { name, type, admin: currentUser.username });
+            const name = document.getElementById('msg-input'); // فیلد کمکی یا پرامپت ساده
+            const roomName = prompt('نام گروه جدید را وارد کنید:');
+            if(roomName) {
+                socket.emit('create_room', { name: roomName, type: 'group', admin: currentUser.username });
             }
         }
 
-        socket.on('room_created', (room) => {
-            selectRoom(room.id, room.name, room.type);
+        socket.on('room_created', (newRoom) => {
+            chatsData.push(newRoom);
+            renderChatList(chatsData);
+            selectRoom(newRoom.id, newRoom.name, newRoom.isVerified);
         });
 
-        function selectRoom(id, name, type) {
+        socket.on('user_chats_loaded', (chats) => {
+            chatsData = chats;
+            renderChatList(chatsData);
+            // تنظیم هدر برای گروه پیش‌فرض
+            const activeChat = chats.find(c => c.id === activeChatId);
+            if(activeChat) {
+                updateChatHeader(activeChat.name, activeChat.isVerified);
+            }
+        });
+
+        function renderChatList(chats) {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+            chats.forEach(chat => {
+                let badge = chat.isVerified ? '<span class="verified-badge">✓</span>' : '';
+                list.innerHTML += `<div class="chat-item" onclick="selectRoom('${chat.id}', '${chat.name}', ${chat.isVerified})">
+                    <div style="width:40px;height:40px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;">📢</div>
+                    <div><b>${chat.name}</b> ${badge}<br><small style="color:var(--text-sec)">گروه عمومی</small></div>
+                </div>`;
+            });
+        }
+
+        function selectRoom(id, name, isVerified) {
             activeChatId = id;
-            document.getElementById('active-chat-title').innerText = name;
-            document.getElementById('input-bar-area').style.display = 'flex';
+            updateChatHeader(name, isVerified);
             socket.emit('join_room', id);
         }
 
-        socket.on('load_history', (messages) => {
-            const box = document.getElementById('messages-box');
-            box.innerHTML = '';
-            messages.forEach(m => appendMessage(m));
-        });
+        function updateChatHeader(name, isVerified) {
+            let badge = isVerified ? '<span class="verified-badge">✓</span>' : '';
+            document.getElementById('active-chat-container').innerHTML = `${name} ${badge}`;
+        }
 
         function sendMessage() {
             const text = document.getElementById('msg-input').value.trim();
-            if(!text || !activeChatId) return;
+            if(!text) return;
             socket.emit('send_message', { chatId: activeChatId, sender: currentUser.username, content: text, type: 'text' });
             document.getElementById('msg-input').value = '';
         }
 
         function sendFile(input) {
             const file = input.files[0];
-            if(file && activeChatId) {
+            if(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     socket.emit('send_message', { chatId: activeChatId, sender: currentUser.username, content: e.target.result, type: 'image' });
@@ -305,21 +243,27 @@
             }
         }
 
+        socket.on('load_history', (messages) => {
+            const box = document.getElementById('messages-box');
+            box.innerHTML = '';
+            messages.forEach(m => appendMessage(m));
+        });
+
         socket.on('new_message', ({ chatId, msg }) => {
             if(chatId === activeChatId) appendMessage(msg);
         });
 
-        socket.on('notify_new_chat', ({ chatId, sender, receiver }) => {
-            if (currentUser && currentUser.username === receiver) {
-                socket.emit('get_user_chats', currentUser.username);
-            }
-        });
-
         function appendMessage(msg) {
             const box = document.getElementById('messages-box');
-            const isMy = msg.sender === currentUser.username;
-            let content = msg.type === 'image' ? `<img src="${msg.content}" width="180" style="border-radius:8px; display:block;">` : escapeHtml(msg.content);
-            box.innerHTML += `<div class="message-bubble ${isMy ? 'my' : ''}"><small style="opacity:0.7">${msg.sender}</small><br>${content}</div>`;
+            let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
+            let content = msg.type === 'image' ? `<img src="${msg.content}" width="200" style="border-radius:8px; display:block; margin-top:5px;">` : escapeHtml(msg.content);
+            
+            box.innerHTML += `
+                <div class="message-bubble">
+                    <strong style="color: var(--accent);">${msg.senderName}</strong> ${badge} 
+                    <span style="font-size: 10px; color: var(--text-sec); float: left;">${msg.time}</span>
+                    <div style="margin-top: 4px;">${content}</div>
+                </div>`;
             box.scrollTop = box.scrollHeight;
         }
 
