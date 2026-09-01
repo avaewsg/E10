@@ -83,30 +83,15 @@ io.on('connection', (socket) => {
         db.chats.push(newRoom);
         db.messages[roomId] = [];
         
-        // ارسال لیست جدید گروه‌ها به همه کاربران آنلاین تا در همه گوشی‌ها ظاهر شود
         io.emit('user_chats_loaded', db.chats);
     });
 
     socket.on('update_group', (data) => {
         const chat = db.chats.find(c => c.id === data.chatId);
         if (chat) {
-            if (data.name) chat.name = data.name;
+            if (data.name !== undefined) chat.name = data.name;
             if (data.avatar !== undefined) chat.avatar = data.avatar;
-            
-            if (data.isLocked !== undefined) {
-                chat.isLocked = data.isLocked;
-                const lockMsg = {
-                    id: 'msg_' + Date.now(),
-                    sender: 'system',
-                    senderName: 'سیستم',
-                    content: data.isLocked ? 'مالک قفل گروه را فعال کرد 🔒' : 'مالک قفل گروه را برداشت 🔓',
-                    type: 'system',
-                    isVerified: true,
-                    time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
-                };
-                db.messages[chat.id].push(lockMsg);
-                io.to(chat.id).emit('new_message', { chatId: chat.id, msg: lockMsg });
-            }
+            if (data.isLocked !== undefined) chat.isLocked = data.isLocked;
 
             io.emit('group_updated', chat);
             io.emit('user_chats_loaded', db.chats);
@@ -119,7 +104,7 @@ io.on('connection', (socket) => {
         const senderUser = db.users.find(u => u.username === sender);
 
         if (chat && chat.isLocked && senderUser && !senderUser.isOwner) {
-            socket.emit('auth_error', 'گروه توسط مالک قفل شده است و فقط مالک می‌تواند پیام ارسال کند.');
+            socket.emit('auth_error', 'گروه توسط مالک قفل شده است.');
             return;
         }
 
@@ -159,6 +144,10 @@ io.on('connection', (socket) => {
     socket.on('join_room', (chatId) => {
         socket.join(chatId);
         socket.emit('load_history', db.messages[chatId] || []);
+        const chat = db.chats.find(c => c.id === chatId);
+        if (chat) {
+            socket.emit('group_updated', chat);
+        }
     });
 });
 
