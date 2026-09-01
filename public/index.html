@@ -14,9 +14,9 @@
             --text-sec: #64748b; 
             --border-color: #e2e8f0;
             --chat-bg: #f1f5f9;
-            --bubble-owner: #fef08a; /* زرد برای مالک */
+            --bubble-owner: #fef08a; 
             --bubble-owner-text: #1e293b;
-            --bubble-other: #ffffff; /* سفید برای بقیه */
+            --bubble-other: #ffffff; 
             --bubble-other-text: #0f172a;
         }
         body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -55,7 +55,6 @@
         
         .verified-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #0ea5e9; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
         
-        /* آواتار دایره‌ای خفن بدون حروف اضافه و بدون کادر آبی خراب */
         .avatar-circle { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; overflow: hidden; }
         .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -131,11 +130,13 @@
         </div>
     </div>
 
-    <!-- مودال پروفایل -->
+    <!-- مودال ویرایش پروفایل و آکون کاربر -->
     <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
-            <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل</h3>
+            <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل و آیکون</h3>
             <input type="text" id="edit-name-input" placeholder="نام جدید شما">
+            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس پروفایل (آیکون):</p>
+            <input type="file" id="edit-profile-avatar-file" accept="image/*" onchange="previewProfileAvatar(event)">
             <button onclick="updateProfileName()">ذخیره تغییرات</button>
             <button style="background:#cbd5e1; color:#0f172a;" onclick="document.getElementById('profile-modal').classList.add('hidden')">انصراف</button>
         </div>
@@ -166,6 +167,7 @@
         let chatsData = [];
         let replyingToMsg = null;
         let base64GroupAvatar = '';
+        let base64ProfileAvatar = '';
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
@@ -219,26 +221,45 @@
         function updateUserUI() {
             let badge = (currentUser.isOwner || currentUser.isVerified) ? '<span class="verified-badge">✓</span>' : '';
             document.getElementById('current-user-display').innerHTML = `${currentUser.name} ${badge} <br><small style="color:var(--text-sec)">@${currentUser.username}</small>`;
-            document.getElementById('sidebar-avatar.innerHTML') = '';
-            document.getElementById('sidebar-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
+            
+            const avatarEl = document.getElementById('sidebar-avatar');
+            if(currentUser.avatar) {
+                avatarEl.innerHTML = `<img src="${currentUser.avatar}">`;
+            } else {
+                avatarEl.innerText = currentUser.name.charAt(0).toUpperCase();
+            }
         }
 
         function openEditProfileModal() {
             document.getElementById('edit-name-input').value = currentUser.name;
+            base64ProfileAvatar = '';
             document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function previewProfileAvatar(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => { base64ProfileAvatar = e.target.result; };
+                reader.readAsDataURL(file);
+            }
         }
 
         function updateProfileName() {
             const newName = document.getElementById('edit-name-input').value.trim();
             if(newName) {
-                socket.emit('update_profile', { username: currentUser.username, newName });
+                socket.emit('update_profile', { 
+                    username: currentUser.username, 
+                    newName, 
+                    avatar: base64ProfileAvatar !== '' ? base64ProfileAvatar : currentUser.avatar 
+                });
                 document.getElementById('profile-modal').classList.add('hidden');
             }
         }
 
         socket.on('profile_updated', (updatedUser) => {
             if(updatedUser.username === currentUser.username) {
-                currentUser.name = updatedUser.name;
+                currentUser = updatedUser;
                 localStorage.setItem('e10_user', JSON.stringify(currentUser));
                 updateUserUI();
             }
@@ -246,19 +267,18 @@
 
         function openCreateRoomModal() {
             const roomName = prompt('نام گروه جدید را وارد کنید:');
-            if(roomName) socket.emit('create_room', { name: roomName, admin: currentUser.username });
+            if(roomName) socket.emit('create_room', { name: roomName, admin: currentUser.username, avatar: '' });
         }
-
-        socket.on('room_created', (newRoom) => {
-            chatsData.push(newRoom);
-            renderChatList(chatsData);
-            selectRoom(newRoom.id);
-        });
 
         socket.on('user_chats_loaded', (chats) => {
             chatsData = chats;
             renderChatList(chatsData);
-            selectRoom(activeChatId);
+            // اگر چت فعلی وجود نداشت یا پاک شده بود روی اولین چت بروو
+            if(!chatsData.find(c => c.id === activeChatId) && chatsData.length > 0) {
+                selectRoom(chatsData[0].id);
+            } else {
+                selectRoom(activeChatId);
+            }
         });
 
         function renderChatList(chats) {
@@ -315,7 +335,7 @@
                 socket.emit('update_group', { 
                     chatId: currentChatObj.id, 
                     name: newName, 
-                    avatar: base64GroupAvatar || currentChatObj.avatar,
+                    avatar: base64GroupAvatar !== '' ? base64GroupAvatar : currentChatObj.avatar,
                     isLocked: isLocked 
                 });
                 document.getElementById('group-modal').classList.add('hidden');
@@ -400,7 +420,6 @@
         function appendMessage(msg) {
             const box = document.getElementById('messages-box');
             
-            // پیام سیستمی قفل گروه
             if(msg.type === 'system') {
                 box.innerHTML += `<div id="${msg.id}" class="message-bubble msg-system">🔒 ${escapeHtml(msg.content)}</div>`;
                 box.scrollTop = box.scrollHeight;
@@ -418,7 +437,6 @@
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b> ${msg.replyTo.content}</div>`;
             }
 
-            // اجازه حذف پیام فقط برای خود فرستنده یا مالک
             let canDelete = (msg.sender === currentUser.username || currentUser.isOwner);
             let deleteBtnHtml = canDelete ? `<button onclick="deleteMessage('${msg.id}')">🗑️</button>` : '';
 
