@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E10 Messenger</title>
+    <style>
+        :root { --bg-dark: #0b0914; --panel-bg: #131022; --accent: #7c3aed; --accent-hover: #6d28d9; --text: #f3f4f6; --text-sec: #9ca3af; }
+        body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .hidden { display: none !important; }
+        
+        /* فرم‌ها */
+        .auth-box { background: var(--panel-bg); padding: 40px; border-radius: 16px; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; border: 1px solid rgba(124, 58, 237, 0.2); }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #1a162b; border: 1px solid #2d264a; border-radius: 8px; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--accent-hover); }
+
+        /* محیط اصلی چت */
+        #app-container { display: flex; width: 100vw; height: 100vh; background: var(--bg-dark); }
+        .sidebar { width: 350px; background: var(--panel-bg); border-left: 1px solid #2d264a; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d264a; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .chat-item:hover { background: rgba(124, 58, 237, 0.1); }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #07050d; }
+        .chat-header { padding: 15px 20px; background: var(--panel-bg); border-bottom: 1px solid #2d264a; display: flex; align-items: center; justify-content: space-between; }
+        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message-bubble { max-width: 60%; padding: 10px 15px; border-radius: 12px; word-break: break-word; font-size: 14px; background: #1a162b; }
+        .message-bubble.my { background: var(--accent); align-self: flex-end; }
+        
+        .input-bar { padding: 15px; background: var(--panel-bg); display: flex; gap: 10px; align-items: center; }
+        .input-bar input { margin: 0; flex: 1; }
+        .verified-badge { color: #38bdf8; font-size: 13px; margin-right: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- صفحه ورود / ثبت نام -->
+    <div id="auth-screen" class="auth-box">
+        <h2 style="color: #a78bfa;">E10 Messenger</h2>
+        <div id="login-form">
+            <input type="text" id="log-user" placeholder="نام کاربری (ای디)">
+            <input type="password" id="log-pass" placeholder="رمز عبور">
+            <button onclick="login()">ورود به حساب</button>
+            <p onclick="toggleAuth(true)" style="font-size: 12px; cursor: pointer; color: var(--accent);">حساب نداری؟ ثبت‌نام کن</p>
+        </div>
+        <div id="reg-form" class="hidden">
+            <input type="text" id="reg-name" placeholder="نام نمایشی">
+            <input type="text" id="reg-user" placeholder="یوزرنیم (آیدی یکتا)">
+            <input type="password" id="reg-pass" placeholder="رمز عبور">
+            <input type="text" id="reg-avatar" placeholder="لینک عکس پروفایل (اختیاری)">
+            <button onclick="register()">ساخت حساب کاربری</button>
+            <p onclick="toggleAuth(false)" style="font-size: 12px; cursor: pointer; color: var(--accent);">قبلاً ثبت‌نام کردی؟ ورود</p>
+        </div>
+    </div>
+
+    <!-- محیط اصلی اپلیکیشن -->
+    <div id="app-container" class="hidden">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3 style="margin: 0; color: #a78bfa;">E10</h3>
+                <button style="width: auto; padding: 8px 12px; margin:0;" onclick="openCreateRoomModal()">+ ساخت گروه/چنل</button>
+            </div>
+            <div style="padding: 10px;">
+                <input type="text" id="search-box" placeholder="جستجوی آیدی یا نام..." oninput="searchUser(this.value)">
+            </div>
+            <div class="chat-list" id="chat-list">
+                <!-- لیست گفتگوها اینجا لود می‌شود -->
+            </div>
+        </div>
+        <div class="chat-area">
+            <div class="chat-header" id="active-chat-title">یک گفتگو را انتخاب کنید</div>
+            <div class="messages-box" id="messages-box"></div>
+            <div class="input-bar">
+                <input type="file" id="file-input" style="display:none" onchange="sendFile(this)">
+                <button style="width:40px; margin:0;" onclick="document.getElementById('file-input').click()">📷</button>
+                <input type="text" id="msg-input" placeholder="پیام خود را بنویسید...">
+                <button style="width:80px; margin:0;" onclick="sendMessage()">ارسال</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentUser = null;
+        let activeChatId = null;
+
+        // بررسی ذخیره لوکال استوریج برای نشست ۲ روزه
+        window.onload = () => {
+            const savedUser = localStorage.getItem('e10_user');
+            const loginTime = localStorage.getItem('e10_time');
+            if (savedUser && loginTime) {
+                const twoDays = 2 * 24 * 60 * 60 * 1000;
+                if (Date.now() - parseInt(loginTime) < twoDays) {
+                    currentUser = JSON.parse(savedUser);
+                    enterApp();
+                } else {
+                    alert('نشست ۲ روزه شما منقضی شد. لطفاً مجدداً رمز ورود را بزنید.');
+                    localStorage.clear();
+                }
+            }
+        };
+
+        function toggleAuth(isReg) {
+            document.getElementById('login-form').classList.toggle('hidden', isReg);
+            document.getElementById('reg-form').classList.toggle('hidden', !isReg);
+        }
+
+        function register() {
+            const name = document.getElementById('reg-name').value;
+            const username = document.getElementById('reg-user').value;
+            const password = document.getElementById('reg-pass').value;
+            const avatar = document.getElementById('reg-avatar').value;
+            if(!username || !password) return alert('اطلاعات ناقص است');
+            socket.emit('register', { name, username, password, avatar });
+        }
+
+        function login() {
+            const username = document.getElementById('log-user').value;
+            const password = document.getElementById('log-pass').value;
+            socket.emit('login', { username, password });
+        }
+
+        socket.on('auth_success', (user) => {
+            currentUser = user;
+            localStorage.setItem('e10_user', JSON.stringify(user));
+            localStorage.setItem('e10_time', Date.now().toString());
+            enterApp();
+        });
+
+        socket.on('auth_error', (err) => alert(err));
+        socket.on('password_expired', (err) => alert(err));
+
+        function enterApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+        }
+
+        function searchUser(query) {
+            if(query.length > 0) socket.emit('search_user', query);
+        }
+
+        socket.on('search_results', (users) => {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+            users.forEach(u => {
+                list.innerHTML += `<div class="chat-item" onclick="startPv('${u.username}')">
+                    <img src="${u.avatar}" width="40" height="40" style="border-radius:50%">
+                    <div><b>${u.name}</b> ${u.isVerified ? '<span class="verified-badge">✔</span>' : ''}<br><small>@${u.username}</small></div>
+                </div>`;
+            });
+        });
+
+        function openCreateRoomModal() {
+            const name = prompt('نام گروه یا کانال را وارد کنید:');
+            const type = confirm('برای ساخت گروه تایید و برای کانال لغو را بزنید (تایید=گروه، لغو=کانال)') ? 'group' : 'channel';
+            if(name) {
+                socket.emit('create_room', { name, type, admin: currentUser.username });
+            }
+        }
+
+        socket.on('room_created', (room) => {
+            const list = document.getElementById('chat-list');
+            list.innerHTML += `<div class="chat-item" onclick="selectRoom('${room.id}', '${room.name}')">
+                <div><b>${room.name}</b> (${room.type === 'group' ? 'گروه' : 'کانال'})</div>
+            </div>`;
+        });
+
+        function selectRoom(id, name) {
+            activeChatId = id;
+            document.getElementById('active-chat-title').innerText = name;
+            socket.emit('join_room', id);
+        }
+
+        socket.on('load_history', (messages) => {
+            const box = document.getElementById('messages-box');
+            box.innerHTML = '';
+            messages.forEach(m => appendMessage(m));
+        });
+
+        function sendMessage() {
+            const text = document.getElementById('msg-input').value;
+            if(!text || !activeChatId) return;
+            socket.emit('send_message', { chatId: activeChatId, sender: currentUser.username, content: text, type: 'text' });
+            document.getElementById('msg-input').value = '';
+        }
+
+        function sendFile(input) {
+            const file = input.files[0];
+            if(file && activeChatId) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    socket.emit('send_message', { chatId: activeChatId, sender: currentUser.username, content: e.target.result, type: 'image' });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        socket.on('new_message', ({ chatId, msg }) => {
+            if(chatId === activeChatId) appendMessage(msg);
+        });
+
+        function appendMessage(msg) {
+            const box = document.getElementById('messages-box');
+            const isMy = msg.sender === currentUser.username;
+            let content = msg.type === 'image' ? `<img src="${msg.content}" width="150" style="border-radius:8px">` : msg.content;
+            box.innerHTML += `<div class="message-bubble ${isMy ? 'my' : ''}"><small>${msg.sender}</small><br>${content}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
