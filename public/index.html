@@ -40,7 +40,7 @@
         .chat-header { padding: 12px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
         .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
-        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); user-select: none; }
         
         .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; border-color: #fde047; }
         .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
@@ -52,7 +52,6 @@
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
-        /* بنر قفل گروه همراه با عکس 1.png در کنار متن به اندازه ایموجی */
         .locked-banner { padding: 14px; background: #fef2f2; color: #991b1b; text-align: center; font-size: 13px; font-weight: bold; border-top: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .locked-banner img { width: 22px; height: 22px; object-fit: cover; border-radius: 50%; vertical-align: middle; display: inline-block; }
         
@@ -60,9 +59,19 @@
         
         .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; font-size: 16px; }
         
-        .msg-actions { position: absolute; left: 10px; top: 5px; display: none; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .message-bubble:hover .msg-actions { display: flex; }
-        .msg-actions button { background: none; border: none; color: var(--text); cursor: pointer; font-size: 11px; padding: 2px 4px; margin: 0; width: auto; }
+        /* منوی کلیک راست (کاستوم) */
+        .custom-context-menu { position: absolute; background: #ffffff; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
+        .context-menu-item { padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; color: var(--text); transition: 0.1s; }
+        .context-menu-item:hover { background: #f1f5f9; color: var(--accent); }
+        .context-menu-item.danger:hover { background: #fee2e2; color: #dc2626; }
+        .context-reactions { display: flex; gap: 6px; padding: 4px 6px 8px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; justify-content: space-around; }
+        .context-reactions span { cursor: pointer; font-size: 18px; transition: transform 0.1s; }
+        .context-reactions span:hover { transform: scale(1.25); }
+
+        /* استایل نمایش واکنش‌ها روی پیام */
+        .reactions-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .reaction-pill { background: rgba(0,0,0,0.06); border-radius: 12px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer; border: 1px solid transparent; }
+        .reaction-pill.active { background: #e0f2fe; border-color: #bae6fd; }
 
         @media(max-width: 768px) {
             #app-container { flex-direction: column; }
@@ -127,13 +136,23 @@
                     <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
                 </div>
                 <div id="locked-group-banner" class="locked-banner hidden">
-                    قفل گروه فعال است <img src="1.png" alt="icon">
+                    قفل گروه فعال است <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==" alt="icon">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- مودال پروفایل -->
+    <div id="custom-context-menu" class="custom-context-menu">
+        <div class="context-reactions">
+            <span onclick="addReaction('❤️')">❤️</span>
+            <span onclick="addReaction('😂')">😂</span>
+            <span onclick="addReaction('👍')">👍</span>
+            <span onclick="addReaction('👎')">👎</span>
+        </div>
+        <div class="context-menu-item" onclick="contextReply()">↩️ پاسخ (Reply)</div>
+        <div id="context-delete-btn" class="context-menu-item danger hidden" onclick="contextDelete()">🗑️ حذف پیام</div>
+    </div>
+
     <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل</h3>
@@ -143,7 +162,6 @@
         </div>
     </div>
 
-    <!-- مودال تنظیمات گروه -->
     <div id="group-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">تنظیمات گروه</h3>
@@ -165,6 +183,7 @@
         let currentChatObj = null;
         let chatsData = [];
         let replyingToMsg = null;
+        let selectedMsgForContext = null;
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
@@ -172,6 +191,14 @@
                 currentUser = JSON.parse(savedUser);
                 enterApp();
             }
+
+            // مخفی کردن منوی کلیک راست با کلیک در هر جای صفحه
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('custom-context-menu');
+                if (!menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
         };
 
         function toggleAuth(isReg) {
@@ -359,10 +386,51 @@
             document.getElementById('replying-banner').classList.add('hidden');
         }
 
-        function deleteMessage(msgId) {
-            if(confirm('آیا می‌خواهید این پیام را حذف کنید؟')) {
-                socket.emit('delete_message', { chatId: activeChatId, msgId, username: currentUser.username });
+        // توابع منوی کلیک راست و تعاملات
+        function handleMessageContextMenu(e, msgId, senderUsername, senderName, content) {
+            e.preventDefault();
+            selectedMsgForContext = { id: msgId, sender: senderUsername, senderName, content };
+            
+            const menu = document.getElementById('custom-context-menu');
+            const deleteBtn = document.getElementById('context-delete-btn');
+
+            // کاربر می‌تواند پیام خودش را پاک کند، یا مالک می‌تواند هر پیامی را پاک کند
+            if (senderUsername === currentUser.username || currentUser.isOwner) {
+                deleteBtn.classList.remove('hidden');
+            } else {
+                deleteBtn.classList.add('hidden');
             }
+
+            menu.style.display = 'flex';
+            menu.style.top = `${Math.min(e.clientY, window.innerHeight - 180)}px`;
+            menu.style.left = `${Math.min(e.clientX, window.innerWidth - 170)}px`;
+        }
+
+        function contextReply() {
+            if (selectedMsgForContext) {
+                setReply(selectedMsgForContext.id, selectedMsgForContext.senderName, selectedMsgForContext.content);
+            }
+            document.getElementById('custom-context-menu').style.display = 'none';
+        }
+
+        function contextDelete() {
+            if (selectedMsgForContext) {
+                if (confirm('آیا می‌خواهید این پیام را حذف کنید؟')) {
+                    socket.emit('delete_message', { chatId: activeChatId, msgId: selectedMsgForContext.id, username: currentUser.username });
+                }
+            }
+            document.getElementById('custom-context-menu').style.display = 'none';
+        }
+
+        function addReaction(emoji) {
+            if (selectedMsgForContext) {
+                socket.emit('toggle_reaction', { chatId: activeChatId, msgId: selectedMsgForContext.id, emoji, username: currentUser.username });
+            }
+            document.getElementById('custom-context-menu').style.display = 'none';
+        }
+
+        function toggleReaction(msgId, emoji) {
+            socket.emit('toggle_reaction', { chatId: activeChatId, msgId, emoji, username: currentUser.username });
         }
 
         socket.on('message_deleted', ({ chatId, msgId }) => {
@@ -382,8 +450,18 @@
             if(chatId === activeChatId) appendMessage(msg);
         });
 
-        function appendMessage(msg) {
-            const box = document.getElementById('messages-box');
+        socket.on('message_updated', ({ chatId, msg }) => {
+            if(chatId === activeChatId) {
+                const existingEl = document.getElementById(msg.id);
+                if (existingEl) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = createMessageHTML(msg);
+                    existingEl.replaceWith(tempDiv.firstElementChild);
+                }
+            }
+        });
+
+        function createMessageHTML(msg) {
             let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
             let contentHtml = escapeHtml(msg.content);
             
@@ -395,20 +473,34 @@
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b> ${msg.replyTo.content}</div>`;
             }
 
-            let canDelete = (msg.sender === currentUser.username || currentUser.isOwner);
-            let deleteBtnHtml = canDelete ? `<button onclick="deleteMessage('${msg.id}')">🗑️</button>` : '';
+            // ساخت بخش واکنش‌ها (Reactions)
+            let reactionsHtml = '';
+            if (msg.reactions && Object.keys(msg.reactions).length > 0) {
+                reactionsHtml += '<div class="reactions-container">';
+                for (const [emoji, users] of Object.entries(msg.reactions)) {
+                    if (users.length > 0) {
+                        let hasReacted = users.includes(currentUser.username);
+                        reactionsHtml += `<div class="reaction-pill ${hasReacted ? 'active' : ''}" onclick="toggleReaction('${msg.id}', '${emoji}')">
+                            <span>${emoji}</span> <span>${users.length}</span>
+                        </div>`;
+                    }
+                }
+                reactionsHtml += '</div>';
+            }
 
-            box.innerHTML += `
-                <div id="${msg.id}" class="message-bubble ${bubbleClass}">
-                    <div class="msg-actions">
-                        <button onclick="setReply('${msg.id}', '${msg.senderName}', '${escapeHtml(msg.content)}')">↩️</button>
-                        ${deleteBtnHtml}
-                    </div>
+            return `
+                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.content).replace(/'/g, "\\'")}')">
                     ${replyHtml}
                     <div><strong style="color: ${isOwnerMsg ? '#854d0e' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
                     <div style="margin-top: 2px;">${contentHtml}</div>
+                    ${reactionsHtml}
                     <span style="font-size: 9px; opacity: 0.7; align-self: flex-end; margin-top: 2px;">${msg.time}</span>
                 </div>`;
+        }
+
+        function appendMessage(msg) {
+            const box = document.getElementById('messages-box');
+            box.innerHTML += createMessageHTML(msg);
             box.scrollTop = box.scrollHeight;
         }
 
