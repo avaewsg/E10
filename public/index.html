@@ -52,7 +52,6 @@
 </head>
 <body>
 
-    <!-- صفحه ورود / ثبت نام -->
     <div id="auth-screen" class="auth-box">
         <h2 style="color: #a78bfa; margin-top:0;">E10 Messenger</h2>
         <div id="login-form">
@@ -73,12 +72,10 @@
         </div>
     </div>
 
-    <!-- محیط اصلی اپلیکیشن -->
     <div id="app-container" class="hidden">
         <div class="sidebar">
             <div class="sidebar-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <!-- دکمه خروج / بازگشت به صفحه ورود در گوشه بالای پنل -->
                     <button title="خروج از حساب" style="width: auto; padding: 6px 10px; margin:0; background:#ef4444; font-size: 12px;" onclick="logout()">🚪 خروج</button>
                     <div>
                         <h3 id="current-user-display" style="margin: 0; color: #a78bfa; font-size: 14px;"></h3>
@@ -189,16 +186,34 @@
             if (currentUser.username === 'kia12' || currentUser.isOwner) {
                 document.getElementById('owner-btn').classList.remove('hidden');
             }
+
+            // درخواست دریافت لیست چت‌ها و پی‌وی‌های کاربر از سرور هنگام ورود
+            socket.emit('get_user_chats', currentUser.username);
         }
 
         function searchTarget(query) {
             if(query.length > 0) socket.emit('search', query);
+            else socket.emit('get_user_chats', currentUser.username); // اگر سرچ خالی شد، چت‌های قبلی رو نشون بده
         }
 
         socket.on('search_results', (results) => {
+            renderChatList(results);
+        });
+
+        socket.on('user_chats_loaded', (chats) => {
+            renderChatList(chats);
+        });
+
+        // تابع کمکی برای رندر کردن لیست چت‌ها در سایدبار
+        function renderChatList(items) {
             const list = document.getElementById('chat-list');
             list.innerHTML = '';
-            results.forEach(item => {
+            if(items.length === 0) {
+                list.innerHTML = `<div style="text-align:center; color:var(--text-sec); padding:20px; font-size:13px;">گفتگویی وجود ندارد</div>`;
+                return;
+            }
+
+            items.forEach(item => {
                 let badge = item.isVerified ? '<span class="verified-badge">✓</span>' : '';
                 if(item.type === 'user') {
                     if(item.username !== currentUser.username) {
@@ -208,6 +223,14 @@
                             <div><b>${item.name}</b> ${badge}<br><small style="color:var(--text-sec)">@${item.username}</small></div>
                         </div>`;
                     }
+                } else if(item.type === 'pv') {
+                    // استخراج نام مخاطب مقابل در پی‌وی
+                    const parts = item.id.replace('pv_', '').split('_');
+                    const targetUsername = parts[0] === currentUser.username ? parts[1] : parts[0];
+                    list.innerHTML += `<div class="chat-item" onclick="selectRoom('${item.id}', '${item.name}', 'pv')">
+                        <div style="width:36px;height:36px;background:#2d264a;border-radius:50%;display:flex;align-items:center;justify-content:center;">👤</div>
+                        <div><b>پی‌وی: @${targetUsername}</b><br><small style="color:var(--text-sec)">گفتگوی خصوصی</small></div>
+                    </div>`;
                 } else {
                     list.innerHTML += `<div class="chat-item" onclick="selectRoom('${item.id}', '${item.name}', '${item.type}')">
                         <div style="width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;">📢</div>
@@ -215,7 +238,7 @@
                     </div>`;
                 }
             });
-        });
+        }
 
         function openOwnerPanel() {
             const target = prompt('یوزر مورد نظر (آیدی بدون @) جهت اعطای/گرفتن تیک آبی را وارد کنید:');
@@ -277,6 +300,14 @@
 
         socket.on('new_message', ({ chatId, msg }) => {
             if(chatId === activeChatId) appendMessage(msg);
+        });
+
+        // گوش دادن به پیام جدید برای به‌روزرسانی خودکار لیست چت‌ها (بدون نیاز به سرچ)
+        socket.on('notify_new_chat', ({ chatId, sender, receiver }) => {
+            if (currentUser && currentUser.username === receiver) {
+                // رفرش کردن لیست چت‌ها تا پی‌وی جدید بلافاصله بالا بیاید
+                socket.emit('get_user_chats', currentUser.username);
+            }
         });
 
         function appendMessage(msg) {
