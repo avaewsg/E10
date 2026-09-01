@@ -98,7 +98,7 @@ io.on('connection', (socket) => {
             type: data.type,
             name: data.name,
             admin: data.admin,
-            isVerified: false, // گروه‌ها به طور پیش‌فرض بدون تیک آبی ساخته می‌شوند
+            isVerified: false,
             members: [data.admin]
         };
         db.chats.push(newRoom);
@@ -106,6 +106,7 @@ io.on('connection', (socket) => {
         io.emit('room_created', newRoom);
     });
 
+    // رفع مشکل ارسال پیام در پی‌وی و اتاق‌ها
     socket.on('send_message', (data) => {
         const { chatId, sender, content, type } = data;
         if (!db.messages[chatId]) db.messages[chatId] = [];
@@ -118,6 +119,7 @@ io.on('connection', (socket) => {
         };
         db.messages[chatId].push(msg);
 
+        // اگر پی‌وی بود، مطمئن شویم در لیست چت‌های دوجانبه ثبت شده است
         if (chatId.startsWith('pv_')) {
             let chatExists = db.chats.find(c => c.id === chatId);
             const parts = chatId.replace('pv_', '').split('_');
@@ -126,20 +128,26 @@ io.on('connection', (socket) => {
 
             if (!chatExists) {
                 if (user1 && user2) {
-                    db.chats.push({
+                    const newPvChat = {
                         id: chatId,
                         type: 'pv',
                         name: `${user1.name} & ${user2.name}`,
                         members: [parts[0], parts[1]]
-                    });
+                    };
+                    db.chats.push(newPvChat);
                 }
             } else {
                 if (!chatExists.members) chatExists.members = [parts[0], parts[1]];
             }
+
+            // عضو کردن اجباری فرستنده و گیرنده در روم سکتور برای دریافت آنلاین پیام
+            io.in(chatId).socketsJoin ? socket.join(chatId) : null;
         }
 
+        // ارسال پیام به همه افراد حاضر در این چت‌روم
         io.to(chatId).emit('new_message', { chatId, msg });
 
+        // اطلاع‌رسانی به کاربر مقابل جهت به‌روزرسانی لیست چت‌ها
         if (chatId.startsWith('pv_')) {
             const parts = chatId.replace('pv_', '').split('_');
             const receiverUsername = parts[0] === sender ? parts[1] : parts[0];
@@ -169,4 +177,3 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => console.log(`E10 Server running on port ${PORT}`));
-                        
