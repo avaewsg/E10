@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (data) => {
-        const { chatId, sender, content, type, replyTo } = data;
+        const { chatId, sender, content, replyTo } = data;
         const chat = db.chats.find(c => c.id === chatId);
         const senderUser = db.users.find(u => u.username === sender);
 
@@ -116,6 +116,7 @@ io.on('connection', (socket) => {
             content,
             type: 'text',
             replyTo: replyTo || null,
+            reactions: {}, // ساختار ذخیره ریکشن‌ها
             isVerified: isOwnerOrVerified,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
         };
@@ -124,12 +125,39 @@ io.on('connection', (socket) => {
         io.to(chatId).emit('new_message', { chatId, msg });
     });
 
+    // مدیریت ثبت یا برداشتن ریکشن روی پیام
+    socket.on('toggle_reaction', ({ chatId, msgId, emoji, username }) => {
+        const messages = db.messages[chatId];
+        if (messages) {
+            const msg = messages.find(m => m.id === msgId);
+            if (msg) {
+                if (!msg.reactions) msg.reactions = {};
+                if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+                const userIndex = msg.reactions[emoji].indexOf(username);
+                if (userIndex > -1) {
+                    // اگر کاربر قبلا این ریکشن رو داده بود، حذفش کن
+                    msg.reactions[emoji].splice(userIndex, 1);
+                    if (msg.reactions[emoji].length === 0) {
+                        delete msg.reactions[emoji];
+                    }
+                } else {
+                    // در غیر این صورت اضافه کن
+                    msg.reactions[emoji].push(username);
+                }
+
+                io.to(chatId).emit('message_updated', { chatId, msg });
+            }
+        }
+    });
+
     socket.on('delete_message', ({ chatId, msgId, username }) => {
         const messages = db.messages[chatId];
         if (messages) {
             const index = messages.findIndex(m => m.id === msgId);
             if (index !== -1) {
                 const user = db.users.find(u => u.username === username);
+                // بررسی سطح دسترسی: کاربر پیام خودش را پاک کند یا مالک هر پیامی را پاک کند
                 if (messages[index].sender === username || (user && user.isOwner)) {
                     messages.splice(index, 1);
                     io.to(chatId).emit('message_deleted', { chatId, msgId });
@@ -141,7 +169,7 @@ io.on('connection', (socket) => {
     socket.on('join_room', (chatId) => {
         socket.join(chatId);
         socket.emit('load_history', db.messages[chatId] || []);
-        const chat = db.chats.find(c => c.id === chatId);
+        const chat = db.chats.front ? null : db.chats.find(c => c.id === chatId);
         if (chat) {
             socket.emit('group_updated', chat);
         }
