@@ -17,7 +17,7 @@ const db = {
         { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true }
     ],
     chats: [
-        { id: 'main_group', type: 'group', name: 'گروه اصلی مالک', avatar: '', admin: 'kia12', isVerified: true, isLocked: false }
+        { id: 'main_group', type: 'group', name: 'گروه اصلی مالک', admin: 'kia12', isVerified: true, isLocked: false }
     ],    
     messages: {
         'main_group': []
@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
                 username: data.username,
                 password: data.password,
                 name: data.name,
-                avatar: data.avatar || '',
+                avatar: '', // بدون پروفایل
                 isVerified: false,
                 isOwner: data.username === 'kia12' || data.username === 'kiya12'
             };
@@ -57,7 +57,7 @@ io.on('connection', (socket) => {
         const user = db.users.find(u => u.username === data.username);
         if (user) {
             if (data.newName) user.name = data.newName;
-            if (data.avatar !== undefined) user.avatar = data.avatar;
+            // عکس پروفایل غیرفعال شد
             socket.emit('profile_updated', user);
         }
     });
@@ -75,7 +75,6 @@ io.on('connection', (socket) => {
             id: roomId,
             type: 'group',
             name: data.name,
-            avatar: data.avatar || '',
             admin: data.admin,
             isVerified: isOwnerOrVerified,
             isLocked: false
@@ -90,7 +89,6 @@ io.on('connection', (socket) => {
         const chat = db.chats.find(c => c.id === data.chatId);
         if (chat) {
             if (data.name !== undefined) chat.name = data.name;
-            if (data.avatar !== undefined) chat.avatar = data.avatar;
             if (data.isLocked !== undefined) chat.isLocked = data.isLocked;
 
             io.emit('group_updated', chat);
@@ -117,7 +115,7 @@ io.on('connection', (socket) => {
             sender,
             senderName: senderUser ? senderUser.name : sender,
             content,
-            type,
+            type: 'text', // فقط متنی
             replyTo: replyTo || null,
             isVerified: isOwnerOrVerified,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
