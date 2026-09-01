@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
                 username: data.username,
                 password: data.password,
                 name: data.name,
-                avatar: '', // بدون پروفایل
+                avatar: '',
                 isVerified: false,
                 isOwner: data.username === 'kia12' || data.username === 'kiya12'
             };
@@ -57,7 +57,6 @@ io.on('connection', (socket) => {
         const user = db.users.find(u => u.username === data.username);
         if (user) {
             if (data.newName) user.name = data.newName;
-            // عکس پروفایل غیرفعال شد
             socket.emit('profile_updated', user);
         }
     });
@@ -115,7 +114,7 @@ io.on('connection', (socket) => {
             sender,
             senderName: senderUser ? senderUser.name : sender,
             content,
-            type: 'text', // فقط متنی
+            type: 'text',
             replyTo: replyTo || null,
             isVerified: isOwnerOrVerified,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
