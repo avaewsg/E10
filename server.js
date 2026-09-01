@@ -7,14 +7,18 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// افزایش حد مجاز برای آپلود عکس و فایل
 app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// پایگاه داده موقت در حافظه (برای پایداری دائمی روی سرور ابری می‌توان به MongoDB متصل کرد)
+// پایگاه داده در حافظه
 const db = {
-    users: [],    // { username, password, name, avatar, isVerified, lastLogin }
-    chats: [],    // { id, type: 'pv'|'group'|'channel', name, members: [], admin }
-    messages: {}  // chatId: [{ sender, text, file, type, time }]
+    users: [
+        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true, lastLogin: Date.now() }
+    ],
+    chats: [],    // { id, type: 'group'|'channel', name, admin, members: [] }
+    messages: {}  // chatId: [{ sender, content, type, time }]
 };
 
 io.on('connection', (socket) => {
@@ -29,8 +33,9 @@ io.on('connection', (socket) => {
                 username: data.username,
                 password: data.password,
                 name: data.name,
-                avatar: data.avatar || 'https://via.placeholder.com/150',
-                isVerified: data.username === 'admin_e10', // تیک آبی پیشفرض برای ادمین کل
+                avatar: data.avatar || '', // فایل Base64 عکس
+                isVerified: false,
+                isOwner: data.username === 'kia12',
                 lastLogin: Date.now()
             };
             db.users.push(newUser);
@@ -38,7 +43,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ورود کاربر با چک کردن انقضای ۲ روزه رمز عبور
+    // ورود کاربر با کنترل انقضای ۲ روزه
     socket.on('login', (data) => {
         const user = db.users.find(u => u.username === data.username && u.password === data.password);
         if (!user) {
@@ -47,23 +52,42 @@ io.on('connection', (socket) => {
         }
 
         const twoDays = 2 * 24 * 60 * 60 * 1000;
-        const now = Date.now();
-        
-        // اگر بیشتر از ۲ روز گذشته باشد، اجبار به ورود مجدد رمز
-        if (now - user.lastLogin > twoDays) {
-            socket.emit('password_expired', 'اعتبار نشست ۲ روزه شما به پایان رسیده است. لطفاً رمز عبور را وارد کنید.');
+        if (Date.now() - user.lastLogin > twoDays) {
+            socket.emit('password_expired', 'اعتبار نشست ۲ روزه شما منقضی شد. لطفاً مجدداً رمز ورود را وارد کنید.');
         } else {
-            user.lastLogin = now; // تمدید نشست
+            user.lastLogin = Date.now();
             socket.emit('auth_success', user);
         }
     });
 
-    // جستجوی آیدی کاربران
-    socket.on('search_user', (query) => {
-        const results = db.users
-            .filter(u => u.username.includes(query))
-            .map(u => ({ username: u.username, name: u.name, avatar: u.avatar, isVerified: u.isVerified }));
-        socket.emit('search_results', results);
+    // جستجوی کاربران یا کانال‌ها
+    socket.on('search', (query) => {
+        const users = db.users
+            .filter(u => u.username.includes(query) || u.name.includes(query))
+            .map(u => ({ username: u.username, name: u.name, avatar: u.avatar, isVerified: u.isVerified, type: 'user' }));
+        
+        const chats = db.chats
+            .filter(c => c.name.includes(query))
+            .map(c => ({ id: c.id, name: c.name, type: c.type, isVerified: c.isVerified }));
+
+        socket.emit('search_results', [...users, ...chats]);
+    });
+
+    // درخواست مالک برای دادن یا گرفتن تیک آبی
+    socket.on('toggle_verified', (data) => {
+        const { targetUsername, adminUsername } = data;
+        const admin = db.users.find(u => u.username === adminUsername);
+        
+        if (admin && admin.isOwner) {
+            const target = db.users.find(u => u.username === targetUsername);
+            if (target) {
+                target.isVerified = !target.isVerified;
+                io.emit('update_user_status', { username: target.username, isVerified: target.isVerified });
+                socket.emit('notification', `وضعیت تیک آبی برای @${target.username} تغییر کرد.`);
+            }
+        } else {
+            socket.emit('auth_error', 'شما دسترسی مالک را ندارید!');
+        }
     });
 
     // ساخت گروه یا کانال
@@ -74,6 +98,7 @@ io.on('connection', (socket) => {
             type: data.type, // 'group' یا 'channel'
             name: data.name,
             admin: data.admin,
+            isVerified: false,
             members: [data.admin]
         };
         db.chats.push(newRoom);
@@ -81,7 +106,7 @@ io.on('connection', (socket) => {
         io.emit('room_created', newRoom);
     });
 
-    // ارسال پیام (متن، عکس، ویس، فایل)
+    // ارسال پیام (متن، عکس، ویس)
     socket.on('send_message', (data) => {
         const { chatId, sender, content, type } = data;
         if (!db.messages[chatId]) db.messages[chatId] = [];
@@ -89,7 +114,7 @@ io.on('connection', (socket) => {
         const msg = {
             sender,
             content,
-            type, // 'text', 'image', 'audio', 'file'
+            type, // 'text', 'image', 'audio'
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
         };
         db.messages[chatId].push(msg);
@@ -103,6 +128,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+server.listen(PORT, '0.0.0.0', () => console.log(`E10 Server running on port ${PORT}`));
