@@ -6,66 +6,62 @@
     <title>E10 Messenger Pro</title>
     <style>
         :root { 
-            --bg-dark: #0f172a; 
-            --panel-bg: #1e293b; 
-            --accent: #3b82f6; 
-            --accent-hover: #2563eb; 
-            --text: #f8fafc; 
-            --text-sec: #94a3b8; 
-            --border-color: #334155;
-            --chat-bg: #090d16;
+            --bg-dark: #f8fafc; 
+            --panel-bg: #ffffff; 
+            --accent: #2563eb; 
+            --accent-hover: #1d4ed8; 
+            --text: #0f172a; 
+            --text-sec: #64748b; 
+            --border-color: #e2e8f0;
+            --chat-bg: #f1f5f9;
             --bubble-owner: #fef08a; /* زرد برای مالک */
             --bubble-owner-text: #1e293b;
-            --bubble-other: #1e293b; /* سفید/تیره برای بقیه */
-            --bubble-other-text: #f8fafc;
+            --bubble-other: #ffffff; /* سفید برای بقیه */
+            --bubble-other-text: #0f172a;
         }
         body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .hidden { display: none !important; }
         
-        /* Modal & Auth Styles */
-        .auth-box, .modal-box { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; border: 1px solid var(--border-color); box-sizing: border-box; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #0f172a; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text); box-sizing: border-box; font-size: 14px; outline: none; }
+        .auth-box, .modal-box { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--border-color); box-sizing: border-box; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text); box-sizing: border-box; font-size: 14px; outline: none; }
         input:focus { border-color: var(--accent); }
         button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         button:hover { background: var(--accent-hover); }
 
         #app-container { display: flex; width: 100vw; height: 100vh; background: var(--bg-dark); }
         
-        /* Sidebar */
         .sidebar { width: 340px; background: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
-        .chat-item:hover { background: rgba(59, 130, 246, 0.1); }
+        .chat-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .chat-item:hover { background: rgba(37, 99, 235, 0.05); }
         
-        /* Chat Area */
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; }
         .chat-header { padding: 12px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
         .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
-        /* Message Bubbles */
-        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; gap: 4px; }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); }
         
-        /* رنگ‌بندی پیام‌ها */
-        .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; border: 1px solid #fde047; }
-        .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; border: 1px solid var(--border-color); }
+        .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; border-color: #fde047; }
+        .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
+        .msg-system { background: #e0f2fe; color: #0369a1; align-self: center; border-radius: 8px; font-size: 12px; text-align: center; border: 1px solid #bae6fd; max-width: 90%; }
         
-        /* Reply Box inside message */
-        .reply-preview-box { background: rgba(0,0,0,0.1); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; opacity: 0.85; }
+        .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; }
 
-        /* Input Bar & Reply Container */
         .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .replying-banner { padding: 8px 15px; background: rgba(59,130,246,0.15); display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); }
+        .replying-banner { padding: 8px 15px; background: #eff6ff; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
         .verified-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #0ea5e9; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
-        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; }
         
-        /* Dropdown/Context Menu for actions */
-        .msg-actions { position: absolute; left: 10px; top: 5px; display: none; gap: 5px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 6px; }
+        /* آواتار دایره‌ای خفن بدون حروف اضافه و بدون کادر آبی خراب */
+        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; overflow: hidden; }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .msg-actions { position: absolute; left: 10px; top: 5px; display: none; gap: 5px; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .message-bubble:hover .msg-actions { display: flex; }
-        .msg-actions button { background: none; border: none; color: white; cursor: pointer; font-size: 11px; padding: 2px 4px; margin: 0; width: auto; }
+        .msg-actions button { background: none; border: none; color: var(--text); cursor: pointer; font-size: 11px; padding: 2px 4px; margin: 0; width: auto; }
 
         @media(max-width: 768px) {
             #app-container { flex-direction: column; }
@@ -76,7 +72,6 @@
 </head>
 <body>
 
-    <!-- صفحه ورود و ثبت نام -->
     <div id="auth-screen" class="auth-box">
         <h2 style="color: var(--accent); margin-top:0;">E10 Messenger Pro</h2>
         <div id="login-form">
@@ -94,7 +89,6 @@
         </div>
     </div>
 
-    <!-- برنامه اصلی چت -->
     <div id="app-container" class="hidden">
         <div class="sidebar">
             <div class="sidebar-header">
@@ -116,13 +110,12 @@
             <div class="chat-header">
                 <div id="active-chat-container" style="display: flex; align-items: center; gap: 8px;">گروه اصلی</div>
                 <div id="group-admin-actions" class="hidden">
-                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#3b82f6;" onclick="openEditGroupModal()">⚙️ تنظیمات گروه</button>
+                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#2563eb;" onclick="openEditGroupModal()">⚙️ تنظیمات گروه</button>
                 </div>
             </div>
 
             <div class="messages-box" id="messages-box"></div>
 
-            <!-- بخش ریپلی شده فعال -->
             <div class="input-container">
                 <div id="replying-banner" class="replying-banner hidden">
                     <div><span style="color:var(--accent)">در حال پاسخ به:</span> <span id="reply-text-preview" style="font-weight:bold;"></span></div>
@@ -130,7 +123,7 @@
                 </div>
                 <div class="input-bar">
                     <input type="file" id="file-input" style="display:none" onchange="sendFile(this)">
-                    <button style="width:40px; height:40px; margin:0; background:#334155; color:var(--text); border-radius:10px; border:none;" onclick="document.getElementById('file-input').click()">📷</button>
+                    <button style="width:40px; height:40px; margin:0; background:#e2e8f0; color:var(--text); border-radius:10px; border:none;" onclick="document.getElementById('file-input').click()">📷</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
                     <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
                 </div>
@@ -138,25 +131,29 @@
         </div>
     </div>
 
-    <!-- مودال ویرایش پروفایل کاربر -->
-    <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:1000;">
+    <!-- مودال پروفایل -->
+    <div id="profile-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">ویرایش پروفایل</h3>
             <input type="text" id="edit-name-input" placeholder="نام جدید شما">
             <button onclick="updateProfileName()">ذخیره تغییرات</button>
-            <button style="background:#475569;" onclick="document.getElementById('profile-modal').classList.add('hidden')">انصراف</button>
+            <button style="background:#cbd5e1; color:#0f172a;" onclick="document.getElementById('profile-modal').classList.add('hidden')">انصراف</button>
         </div>
     </div>
 
-    <!-- مودال تنظیمات گروه (مخصوص مالک) -->
-    <div id="group-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:1000;">
+    <!-- مودال تنظیمات گروه و قفل گروه -->
+    <div id="group-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;">
         <div class="modal-box">
             <h3 style="color:var(--accent); margin-top:0;">تنظیمات گروه</h3>
             <input type="text" id="edit-group-name-input" placeholder="نام جدید گروه">
-            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">تغییر تصویر گروه:</p>
+            <p style="font-size:11px; color:var(--text-sec); text-align:right; margin:5px 0;">انتخاب عکس گروه:</p>
             <input type="file" id="edit-group-avatar-file" accept="image/*" onchange="previewGroupAvatar(event)">
-            <button onclick="saveGroupSettings()">اعمال تغییرات گروه</button>
-            <button style="background:#475569;" onclick="document.getElementById('group-modal').classList.add('hidden')">انصراف</button>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0; justify-content: right; font-size: 14px;">
+                <label for="lock-group-checkbox">قفل گروه (فقط مالک پیام دهد):</label>
+                <input type="checkbox" id="lock-group-checkbox" style="width: 20px; height: 20px; margin:0;">
+            </div>
+            <button onclick="saveGroupSettings()">اعمال تغییرات</button>
+            <button style="background:#cbd5e1; color:#0f172a;" onclick="document.getElementById('group-modal').classList.add('hidden')">انصراف</button>
         </div>
     </div>
 
@@ -222,6 +219,7 @@
         function updateUserUI() {
             let badge = (currentUser.isOwner || currentUser.isVerified) ? '<span class="verified-badge">✓</span>' : '';
             document.getElementById('current-user-display').innerHTML = `${currentUser.name} ${badge} <br><small style="color:var(--text-sec)">@${currentUser.username}</small>`;
+            document.getElementById('sidebar-avatar.innerHTML') = '';
             document.getElementById('sidebar-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
         }
 
@@ -268,8 +266,9 @@
             list.innerHTML = '';
             chats.forEach(chat => {
                 let badge = chat.isVerified ? '<span class="verified-badge">✓</span>' : '';
+                let avatarContent = chat.avatar ? `<img src="${chat.avatar}">` : chat.name.charAt(0);
                 list.innerHTML += `<div class="chat-item" onclick="selectRoom('${chat.id}')">
-                    <div class="avatar-circle" style="background:#3b82f6;">${chat.name.charAt(0)}</div>
+                    <div class="avatar-circle">${avatarContent}</div>
                     <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${chat.name}</b> ${badge}<br><small style="color:var(--text-sec)">گروه عمومی</small></div>
                 </div>`;
             });
@@ -280,9 +279,9 @@
             currentChatObj = chatsData.find(c => c.id === id);
             if(currentChatObj) {
                 let badge = currentChatObj.isVerified ? '<span class="verified-badge">✓</span>' : '';
-                document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:325px;height:32px;font-size:12px;">${currentChatObj.name.charAt(0)}</div> ${currentChatObj.name} ${badge}`;
+                let avatarContent = currentChatObj.avatar ? `<img src="${currentChatObj.avatar}">` : currentChatObj.name.charAt(0);
+                document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${avatarContent}</div> ${currentChatObj.name} ${badge}`;
                 
-                // نمایش تنظیمات گروه فقط اگر کاربر مالک باشد یا ادمین گروه
                 if(currentUser.isOwner || currentChatObj.admin === currentUser.username) {
                     document.getElementById('group-admin-actions').classList.remove('hidden');
                 } else {
@@ -295,6 +294,8 @@
         function openEditGroupModal() {
             if(!currentChatObj) return;
             document.getElementById('edit-group-name-input').value = currentChatObj.name;
+            document.getElementById('lock-group-checkbox').checked = currentChatObj.isLocked || false;
+            base64GroupAvatar = '';
             document.getElementById('group-modal').classList.remove('hidden');
         }
 
@@ -309,8 +310,14 @@
 
         function saveGroupSettings() {
             const newName = document.getElementById('edit-group-name-input').value.trim();
+            const isLocked = document.getElementById('lock-group-checkbox').checked;
             if(newName && currentChatObj) {
-                socket.emit('update_group', { chatId: currentChatObj.id, name: newName, avatar: base64GroupAvatar || currentChatObj.avatar });
+                socket.emit('update_group', { 
+                    chatId: currentChatObj.id, 
+                    name: newName, 
+                    avatar: base64GroupAvatar || currentChatObj.avatar,
+                    isLocked: isLocked 
+                });
                 document.getElementById('group-modal').classList.add('hidden');
             }
         }
@@ -368,7 +375,7 @@
         }
 
         function deleteMessage(msgId) {
-            if(confirm('آیا مطمئن هستید که می‌خواهید این پیام را حذف کنید؟')) {
+            if(confirm('آیا می‌خواهید این پیام را حذف کنید؟')) {
                 socket.emit('delete_message', { chatId: activeChatId, msgId, username: currentUser.username });
             }
         }
@@ -392,10 +399,17 @@
 
         function appendMessage(msg) {
             const box = document.getElementById('messages-box');
-            let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
-            let contentHtml = msg.type === 'image' ? `<img src="${msg.content}" style="max-width:100%; width:200px; border-radius:10px; display:block; margin-top:4px;">` : escapeHtml(msg.content);
             
-            // تعیین استایل حباب بر اساس مالک بودن فرستنده پیام
+            // پیام سیستمی قفل گروه
+            if(msg.type === 'system') {
+                box.innerHTML += `<div id="${msg.id}" class="message-bubble msg-system">🔒 ${escapeHtml(msg.content)}</div>`;
+                box.scrollTop = box.scrollHeight;
+                return;
+            }
+
+            let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
+            let contentHtml = msg.type === 'image' ? `<img src="${msg.content}" style="max-width:100%; width:180px; border-radius:8px; display:block; margin-top:4px;">` : escapeHtml(msg.content);
+            
             let isOwnerMsg = (msg.sender === 'kia12' || msg.sender === 'kiya12' || msg.isVerified);
             let bubbleClass = isOwnerMsg ? 'msg-owner' : 'msg-other';
 
@@ -404,11 +418,15 @@
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b> ${msg.replyTo.content}</div>`;
             }
 
+            // اجازه حذف پیام فقط برای خود فرستنده یا مالک
+            let canDelete = (msg.sender === currentUser.username || currentUser.isOwner);
+            let deleteBtnHtml = canDelete ? `<button onclick="deleteMessage('${msg.id}')">🗑️</button>` : '';
+
             box.innerHTML += `
                 <div id="${msg.id}" class="message-bubble ${bubbleClass}">
                     <div class="msg-actions">
                         <button onclick="setReply('${msg.id}', '${msg.senderName}', '${escapeHtml(msg.content)}')">↩️</button>
-                        <button onclick="deleteMessage('${msg.id}')">🗑️</button>
+                        ${deleteBtnHtml}
                     </div>
                     ${replyHtml}
                     <div><strong style="color: ${isOwnerMsg ? '#854d0e' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
