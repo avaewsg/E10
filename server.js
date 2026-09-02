@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (data) => {
-        const { chatId, sender, content, replyTo } = data;
+        const { chatId, sender, content, type, replyTo } = data;
         const chat = db.chats.find(c => c.id === chatId);
         const senderUser = db.users.find(u => u.username === sender);
 
@@ -122,9 +122,10 @@ io.on('connection', (socket) => {
             sender,
             senderName: senderUser ? senderUser.name : sender,
             content,
-            type: 'text',
+            type: type || 'text',
             replyTo: replyTo || null,
             reactions: {},
+            seenBy: [sender],
             isVerified: isOwnerOrVerified,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
         };
@@ -133,7 +134,24 @@ io.on('connection', (socket) => {
         io.to(chatId).emit('new_message', { chatId, msg });
     });
 
-    // مدیریت انحصاری تک‌ریاکشن برای هر کاربر روی هر پیام
+    // مدیریت خوانده شدن پیام‌ها (تیک دوم)
+    socket.on('mark_messages_seen', ({ chatId, username }) => {
+        const messages = db.messages[chatId];
+        if (messages) {
+            let updated = false;
+            messages.forEach(msg => {
+                if (!msg.seenBy) msg.seenBy = [];
+                if (!msg.seenBy.includes(username)) {
+                    msg.seenBy.push(username);
+                    updated = true;
+                }
+            });
+            if (updated) {
+                io.to(chatId).emit('load_history', messages);
+            }
+        }
+    });
+
     socket.on('toggle_reaction', ({ chatId, msgId, emoji, username }) => {
         const messages = db.messages[chatId];
         if (messages) {
@@ -146,7 +164,6 @@ io.on('connection', (socket) => {
                     alreadyHasThisEmoji = true;
                 }
 
-                // پاک کردن تمام واکنش‌های قبلی این کاربر روی این پیام
                 for (const key of Object.keys(msg.reactions)) {
                     msg.reactions[key] = msg.reactions[key].filter(u => u !== username);
                     if (msg.reactions[key].length === 0) {
@@ -154,7 +171,6 @@ io.on('connection', (socket) => {
                     }
                 }
 
-                // اگر روی ایموجی جدیدی کلیک کرده، آن را ثبت کن (اگر روی همان قبلی کلیک کرده بود فقط پاک می‌شود)
                 if (!alreadyHasThisEmoji) {
                     if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
                     msg.reactions[emoji].push(username);
