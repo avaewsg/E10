@@ -49,6 +49,8 @@
 
         .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .replying-banner { padding: 8px 15px; background: #eff6ff; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
+        .typing-indicator-bar { padding: 4px 15px; font-size: 11px; color: var(--text-sec); font-style: italic; background: #f8fafc; min-height: 18px; }
+
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
@@ -59,7 +61,6 @@
         
         .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; font-size: 16px; }
         
-        /* منوی کلیک راست (کاستوم) */
         .custom-context-menu { position: absolute; background: #ffffff; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
         .context-menu-item { padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; color: var(--text); transition: 0.1s; }
         .context-menu-item:hover { background: #f1f5f9; color: var(--accent); }
@@ -68,7 +69,6 @@
         .context-reactions span { cursor: pointer; font-size: 18px; transition: transform 0.1s; }
         .context-reactions span:hover { transform: scale(1.25); }
 
-        /* استایل نمایش واکنش‌ها روی پیام */
         .reactions-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
         .reaction-pill { background: rgba(0,0,0,0.06); border-radius: 12px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer; border: 1px solid transparent; }
         .reaction-pill.active { background: #e0f2fe; border-color: #bae6fd; }
@@ -131,8 +131,11 @@
                     <div><span style="color:var(--accent)">در حال پاسخ به:</span> <span id="reply-text-preview" style="font-weight:bold;"></span></div>
                     <span onclick="cancelReply()" style="cursor:pointer; color:#ef4444; font-weight:bold;">✖</span>
                 </div>
+                
+                <div id="typing-indicator" class="typing-indicator-bar"></div>
+
                 <div class="input-bar" id="active-input-bar">
-                    <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." oninput="handleTypingInput()" onkeypress="if(event.key==='Enter') sendMessage()">
                     <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
                 </div>
                 <div id="locked-group-banner" class="locked-banner hidden">
@@ -184,6 +187,9 @@
         let chatsData = [];
         let replyingToMsg = null;
         let selectedMsgForContext = null;
+        
+        let typingTimeout = null;
+        let isCurrentlyTyping = false;
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
@@ -192,7 +198,6 @@
                 enterApp();
             }
 
-            // مخفی کردن منوی کلیک راست با کلیک در هر جای صفحه
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('custom-context-menu');
                 if (!menu.contains(e.target)) {
@@ -299,6 +304,7 @@
         function selectRoom(id) {
             activeChatId = id;
             currentChatObj = chatsData.find(c => c.id === id);
+            document.getElementById('typing-indicator').innerText = '';
             if(currentChatObj) {
                 let badge = currentChatObj.isVerified ? '<span class="verified-badge">✓</span>' : '';
                 document.getElementById('active-chat-container').innerHTML = `<div class="avatar-circle" style="width:34px;height:34px;font-size:13px;">${currentChatObj.name.charAt(0)}</div> ${currentChatObj.name} ${badge}`;
@@ -362,9 +368,37 @@
             }
         });
 
+        function handleTypingInput() {
+            const text = document.getElementById('msg-input').value;
+            if (text.trim().length > 0) {
+                if (!isCurrentlyTyping) {
+                    isCurrentlyTyping = true;
+                    socket.emit('typing_start', { chatId: activeChatId, username: currentUser.name });
+                }
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    isCurrentlyTyping = false;
+                    socket.emit('typing_stop', { chatId: activeChatId, username: currentUser.name });
+                }, 2000);
+            } else {
+                if (isCurrentlyTyping) {
+                    isCurrentlyTyping = false;
+                    clearTimeout(typingTimeout);
+                    socket.emit('typing_stop', { chatId: activeChatId, username: currentUser.name });
+                }
+            }
+        }
+
         function sendMessage() {
             const text = document.getElementById('msg-input').value.trim();
             if(!text) return;
+            
+            if (isCurrentlyTyping) {
+                isCurrentlyTyping = false;
+                clearTimeout(typingTimeout);
+                socket.emit('typing_stop', { chatId: activeChatId, username: currentUser.name });
+            }
+
             socket.emit('send_message', { 
                 chatId: activeChatId, 
                 sender: currentUser.username, 
@@ -374,6 +408,14 @@
             document.getElementById('msg-input').value = '';
             cancelReply();
         }
+
+        socket.on('display_typing', ({ username }) => {
+            document.getElementById('typing-indicator').innerText = `${username} در حال نوشتن پیام...`;
+        });
+
+        socket.on('hide_typing', () => {
+            document.getElementById('typing-indicator').innerText = '';
+        });
 
         function setReply(msgId, senderName, content) {
             replyingToMsg = { id: msgId, senderName, content: content.length > 30 ? content.substring(0,30)+'...' : content };
@@ -386,7 +428,6 @@
             document.getElementById('replying-banner').classList.add('hidden');
         }
 
-        // توابع منوی کلیک راست و تعاملات
         function handleMessageContextMenu(e, msgId, senderUsername, senderName, content) {
             e.preventDefault();
             selectedMsgForContext = { id: msgId, sender: senderUsername, senderName, content };
@@ -394,7 +435,6 @@
             const menu = document.getElementById('custom-context-menu');
             const deleteBtn = document.getElementById('context-delete-btn');
 
-            // کاربر می‌تواند پیام خودش را پاک کند، یا مالک می‌تواند هر پیامی را پاک کند
             if (senderUsername === currentUser.username || currentUser.isOwner) {
                 deleteBtn.classList.remove('hidden');
             } else {
@@ -473,7 +513,6 @@
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b> ${msg.replyTo.content}</div>`;
             }
 
-            // ساخت بخش واکنش‌ها (Reactions)
             let reactionsHtml = '';
             if (msg.reactions && Object.keys(msg.reactions).length > 0) {
                 reactionsHtml += '<div class="reactions-container">';
