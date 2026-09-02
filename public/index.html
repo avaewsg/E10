@@ -37,7 +37,6 @@
 
         * { box-sizing: border-box; }
         
-        /* استفاده از واحد svh برای جلوگیری از به هم ریختگی ارتفاع در مرورگر موبایل */
         html, body { 
             font-family: Tahoma, sans-serif; 
             background: var(--bg-dark); 
@@ -106,7 +105,9 @@
         .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
         .emoji-grid span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; }
         .emoji-grid span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
-        .custom-inline-emoji { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; display: inline-block; cursor: pointer; border-radius: 4px; }
+        
+        /* سایز بزرگ‌تر و مناسب‌تر برای ایموجی کاستوم درون متن و ریپلای */
+        .custom-inline-emoji { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; display: inline-block; cursor: pointer; border-radius: 4px; margin: 0 2px; }
 
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .sticker-item { width: 100%; height: 60px; object-fit: contain; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.02); transition: transform 0.1s; }
@@ -130,7 +131,6 @@
         .reaction-pill { background: rgba(0,0,0,0.06); border-radius: 12px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer; border: 1px solid transparent; }
         .reaction-pill.active { background: #e0f2fe; border-color: #bae6fd; }
 
-        /* اصلاح نمای موبایل برای جلوگیری از پریدن لایه‌ها روی هم */
         @media(max-width: 768px) {
             .sidebar {
                 position: absolute;
@@ -419,6 +419,11 @@
                 customInlineEmojis.push({ tag, src: reader.result });
                 localStorage.setItem('e10_custom_inline_emojis', JSON.stringify(customInlineEmojis));
                 renderCustomInlineEmojis();
+                
+                // به محض آپلود، مستقیماً به جای تگ، ایموجی تصویر را به متن اضافه می‌کنیم
+                const input = document.getElementById('msg-input');
+                input.value += tag;
+                input.focus();
             };
         }
 
@@ -744,13 +749,6 @@
             let text = textInput.value.trim();
             if(!text) return;
             
-            if (typeof customInlineEmojis !== 'undefined' && Array.isArray(customInlineEmojis)) {
-                customInlineEmojis.forEach(item => {
-                    let regex = new RegExp(escapeRegExp(item.tag), 'g');
-                    text = text.replace(regex, `<img class="custom-inline-emoji" src="${item.src}" alt="emoji">`);
-                });
-            }
-            
             if (isCurrentlyTyping) {
                 isCurrentlyTyping = false;
                 clearTimeout(typingTimeout);
@@ -781,7 +779,7 @@
                 replyingToMsg = { 
                     id: msgId, 
                     senderName, 
-                    content: `<img src="${content}" style="width:20px; height:20px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">`, 
+                    content: `<img src="${content}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">`, 
                     type: 'sticker' 
                 };
             } else if (type === 'voice') {
@@ -792,6 +790,7 @@
                     type: 'voice' 
                 };
             } else {
+                // پاکسازی کامل تگ‌های نام کاربری و اضافه کردن نسخه پرسرعت و تمیز ریپلای
                 let parsedContent = parseInlineEmojis(content);
                 let textPreview = parsedContent.length > 40 ? parsedContent.substring(0,40)+'...' : parsedContent;
                 replyingToMsg = { 
@@ -801,7 +800,9 @@
                     type: 'text' 
                 };
             }
-            document.getElementById('reply-text-preview').innerHTML = `<b>${senderName}:</b>&nbsp;${replyingToMsg.content}`;
+            
+            // اصلاح بنر ریپلای برای حذف نام‌های اضافی و نمایش تمیز متن/ایموجی
+            document.getElementById('reply-text-preview').innerHTML = `${replyingToMsg.content}`;
             document.getElementById('replying-banner').classList.remove('hidden');
         }
 
@@ -906,10 +907,11 @@
             let replyHtml = '';
             if(msg.replyTo) {
                 let replyContentDisplay = msg.replyTo.type === 'sticker' 
-                    ? `<img src="${msg.replyTo.content}" style="width:20px; height:20px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
-                    : msg.replyTo.content;
+                    ? `<img src="${msg.replyTo.content}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
+                    : parseInlineEmojis(msg.replyTo.content);
                 
-                replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b>&nbsp;${replyContentDisplay}</div>`;
+                // حذف نام کاربر از بالای متن ریپلای شده جهت جلوگیری از تکرار متن اضافی
+                replyHtml = `<div class="reply-preview-box">${replyContentDisplay}</div>`;
             }
 
             let bodyContent = '';
@@ -918,7 +920,7 @@
             } else if (msg.type === 'sticker') {
                 bodyContent = `<img class="message-sticker" src="${msg.content}" alt="sticker">`;
             } else {
-                bodyContent = `<div style="margin-top: 2px;">${msg.content}</div>`;
+                bodyContent = `<div style="margin-top: 2px;">${parseInlineEmojis(msg.content)}</div>`;
             }
 
             let reactionsHtml = '';
