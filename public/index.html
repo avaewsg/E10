@@ -6,6 +6,21 @@
     <title>E10 Messenger Pro</title>
     <style>
         :root { 
+            --bg-dark: #0f172a; 
+            --panel-bg: #1e293b; 
+            --accent: #3b82f6; 
+            --accent-hover: #2563eb; 
+            --text: #f8fafc; 
+            --text-sec: #94a3b8; 
+            --border-color: #334155;
+            --chat-bg: #090d16;
+            --bubble-owner: #334155; 
+            --bubble-owner-text: #f8fafc;
+            --bubble-other: #1e293b; 
+            --bubble-other-text: #f8fafc;
+        }
+        
+        [data-theme="light"] {
             --bg-dark: #f8fafc; 
             --panel-bg: #ffffff; 
             --accent: #2563eb; 
@@ -18,21 +33,6 @@
             --bubble-owner-text: #1e293b;
             --bubble-other: #ffffff; 
             --bubble-other-text: #0f172a;
-        }
-        
-        [data-theme="dark"] {
-            --bg-dark: #0f172a;
-            --panel-bg: #1e293b;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --text: #f8fafc;
-            --text-sec: #94a3b8;
-            --border-color: #334155;
-            --chat-bg: #090d16;
-            --bubble-owner: #334155;
-            --bubble-owner-text: #f8fafc;
-            --bubble-other: #1e293b;
-            --bubble-other-text: #f8fafc;
         }
 
         * { box-sizing: border-box; }
@@ -52,7 +52,7 @@
 
         .hidden { display: none !important; }
         
-        .auth-box, .modal-box { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--border-color); }
+        .auth-box, .modal-box { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; border: 1px solid var(--border-color); }
         input { width: 100%; padding: 12px; margin: 8px 0; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; }
         input:focus { border-color: var(--accent); }
         button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
@@ -64,14 +64,15 @@
         .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .chat-list { flex: 1; overflow-y: auto; }
         .chat-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
-        .chat-item:hover { background: rgba(37, 99, 235, 0.05); }
+        .chat-item:hover { background: rgba(59, 130, 246, 0.05); }
         
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; height: 100%; z-index: 1; overflow: hidden; min-width: 0; }
         .chat-header { padding: 12px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; height: 60px; }
         
-        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; width: 100%; will-change: transform; scroll-behavior: smooth; }
         
-        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); user-select: none; }
+        .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); user-select: none; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
         .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; }
         .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
@@ -79,8 +80,13 @@
         .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
 
         .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative; flex-shrink: 0; width: 100%; z-index: 20; }
-        .replying-banner { padding: 8px 15px; background: rgba(37,99,235,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
+        .replying-banner { padding: 8px 15px; background: rgba(59,130,246,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
         .typing-indicator-bar { padding: 4px 15px; font-size: 11px; color: var(--text-sec); font-style: italic; background: var(--panel-bg); min-height: 18px; }
+
+        /* پیش‌نمایش عکس حرفه‌ای قبل از ارسال */
+        .image-preview-banner { display: none; padding: 10px 15px; background: rgba(0,0,0,0.04); border-bottom: 1px solid var(--border-color); align-items: center; gap: 10px; }
+        .image-preview-banner img { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); }
+        .image-preview-banner span { font-size: 12px; color: var(--text-sec); flex: 1; }
 
         .input-bar { padding: 10px 15px; display: flex; gap: 8px; align-items: center; width: 100%; background: var(--panel-bg); }
         .input-bar input { margin: 0; flex: 1; }
@@ -97,7 +103,7 @@
         .status-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--panel-bg); background: #94a3b8; }
         .status-dot.online { background: #22c55e; }
 
-        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; display: flex; flex-direction: column; }
+        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 99; display: flex; flex-direction: column; }
         .emoji-tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-dark); border-top-left-radius: 12px; border-top-right-radius: 12px; }
         .emoji-tab { flex: 1; padding: 8px; text-align: center; font-size: 12px; cursor: pointer; font-weight: bold; color: var(--text-sec); }
         .emoji-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--panel-bg); }
@@ -115,11 +121,13 @@
 
         audio { height: 32px; max-width: 240px; margin-top: 4px; }
         .message-sticker { max-width: 140px; max-height: 140px; object-fit: contain; border-radius: 8px; margin-top: 2px; }
+        .message-image { max-width: 240px; max-height: 240px; object-fit: cover; border-radius: 10px; margin-top: 2px; cursor: pointer; transition: transform 0.2s; }
+        .message-image:hover { transform: scale(1.02); }
 
         .msg-ticks { font-size: 11px; margin-right: 4px; letter-spacing: -3px; color: #94a3b8; display: inline-block; }
         .msg-ticks.seen { color: #3b82f6; }
 
-        .custom-context-menu { position: absolute; background: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
+        .custom-context-menu { position: absolute; background: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
         .context-menu-item { padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; color: var(--text); transition: 0.1s; }
         .context-menu-item:hover { background: rgba(0,0,0,0.05); color: var(--accent); }
         .context-menu-item.danger:hover { background: #fee2e2; color: #dc2626; }
@@ -129,7 +137,7 @@
 
         .reactions-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
         .reaction-pill { background: rgba(0,0,0,0.06); border-radius: 12px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer; border: 1px solid transparent; }
-        .reaction-pill.active { background: #e0f2fe; border-color: #bae6fd; }
+        .reaction-pill.active { background: #dbeafe; border-color: #93c5fd; }
 
         @media(max-width: 768px) {
             .sidebar { position: absolute; top: 0; right: 0; width: 100%; height: 100%; z-index: 10; transition: transform 0.3s ease; }
@@ -189,7 +197,7 @@
                     <div id="active-chat-container" style="display: flex; align-items: center; gap: 8px;">گروه اصلی</div>
                 </div>
                 <div id="group-admin-actions" class="hidden">
-                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#2563eb;" onclick="openEditGroupModal()">⚙️ تنظیمات</button>
+                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#3b82f6;" onclick="openEditGroupModal()">⚙️ تنظیمات</button>
                 </div>
             </div>
 
@@ -202,6 +210,13 @@
                 </div>
                 
                 <div id="typing-indicator" class="typing-indicator-bar"></div>
+
+                <!-- پیش‌نمایش عکس حرفه‌ای قبل از ارسال -->
+                <div id="image-preview-banner" class="image-preview-banner">
+                    <img id="preview-img-tag" src="" alt="preview">
+                    <span>تصویر آماده ارسال...</span>
+                    <button onclick="cancelImageSelection()" style="width:auto; background:transparent; color:#ef4444; font-size:16px; padding:0 8px; margin:0; border:none;">✖</button>
+                </div>
 
                 <div id="emoji-picker" class="emoji-picker-box hidden">
                     <div class="emoji-tabs">
@@ -240,6 +255,8 @@
                 </div>
 
                 <div class="input-bar" id="active-input-bar">
+                    <input type="file" id="chat-image-file-input" accept="image/*" style="display:none;" onchange="handleImageSelected(event)">
+                    <button style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="document.getElementById('chat-image-file-input').click()" title="ارسال عکس">📷</button>
                     <button style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleEmojiPicker()" title="ایموجی و استیکر">😊</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." oninput="handleTypingInput()" onkeypress="if(event.key==='Enter') sendMessage()">
                     <button id="voice-record-btn" style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleVoiceRecording()" title="ضبط صدا">🎤</button>
@@ -305,6 +322,7 @@
         let chatsData = [];
         let replyingToMsg = null;
         let selectedMsgForContext = null;
+        let selectedImageBase64 = null;
         
         let typingTimeout = null;
         let isCurrentlyTyping = false;
@@ -323,7 +341,7 @@
                 enterApp();
             }
 
-            const savedTheme = localStorage.getItem('e10_theme') || 'light';
+            const savedTheme = localStorage.getItem('e10_theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
 
             document.addEventListener('click', (e) => {
@@ -391,6 +409,25 @@
             reader.onloadend = () => {
                 socket.emit('add_custom_sticker', reader.result);
             };
+        }
+
+        // انتخاب و پیش‌نمایش عکس چت
+        function handleImageSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+                selectedImageBase64 = reader.result;
+                document.getElementById('preview-img-tag').src = selectedImageBase64;
+                document.getElementById('image-preview-banner').style.display = 'flex';
+            };
+        }
+
+        function cancelImageSelection() {
+            selectedImageBase64 = null;
+            document.getElementById('chat-image-file-input').value = '';
+            document.getElementById('image-preview-banner').style.display = 'none';
         }
 
         socket.on('sync_custom_emojis', (serverEmojis) => {
@@ -686,6 +723,7 @@
                 document.getElementById('active-input-bar').classList.add('hidden');
                 document.getElementById('locked-group-banner').classList.remove('hidden');
                 document.getElementById('replying-banner').classList.add('hidden');
+                document.getElementById('image-preview-banner').style.display = 'none';
             } else {
                 document.getElementById('active-input-bar').classList.remove('hidden');
                 document.getElementById('locked-group-banner').classList.add('hidden');
@@ -750,7 +788,8 @@
         function sendMessage() {
             const textInput = document.getElementById('msg-input');
             let text = textInput.value.trim();
-            if(!text) return;
+            
+            if (!text && !selectedImageBase64) return;
             
             if (isCurrentlyTyping) {
                 isCurrentlyTyping = false;
@@ -758,14 +797,25 @@
                 socket.emit('typing_stop', { chatId: activeChatId, username: currentUser.name });
             }
 
-            socket.emit('send_message', { 
-                chatId: activeChatId, 
-                sender: currentUser.username, 
-                content: text, 
-                type: 'text',
-                replyTo: replyingToMsg 
-            });
-            textInput.value = '';
+            if (selectedImageBase64) {
+                socket.emit('send_message', { 
+                    chatId: activeChatId, 
+                    sender: currentUser.username, 
+                    content: selectedImageBase64, 
+                    type: 'image',
+                    replyTo: replyingToMsg 
+                });
+                cancelImageSelection();
+            } else {
+                socket.emit('send_message', { 
+                    chatId: activeChatId, 
+                    sender: currentUser.username, 
+                    content: text, 
+                    type: 'text',
+                    replyTo: replyingToMsg 
+                });
+                textInput.value = '';
+            }
             cancelReply();
         }
 
@@ -791,6 +841,13 @@
                     senderName, 
                     content: 'پیام صوتی 🎤', 
                     type: 'voice' 
+                };
+            } else if (type === 'image') {
+                replyingToMsg = { 
+                    id: msgId, 
+                    senderName, 
+                    content: 'تصویر 📷', 
+                    type: 'image' 
                 };
             } else {
                 let parsedContent = parseInlineEmojis(content);
@@ -915,7 +972,7 @@
             if(msg.replyTo) {
                 let replyContentDisplay = msg.replyTo.type === 'sticker' 
                     ? `<img src="${msg.replyTo.content}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
-                    : parseInlineEmojis(msg.replyTo.content);
+                    : (msg.replyTo.type === 'image' ? 'تصویر 📷' : parseInlineEmojis(msg.replyTo.content));
                 
                 replyHtml = `<div class="reply-preview-box">${replyContentDisplay}</div>`;
             }
@@ -925,6 +982,8 @@
                 bodyContent = `<audio controls src="${msg.content}"></audio>`;
             } else if (msg.type === 'sticker') {
                 bodyContent = `<img class="message-sticker" src="${msg.content}" alt="sticker">`;
+            } else if (msg.type === 'image') {
+                bodyContent = `<img class="message-image" src="${msg.content}" alt="image">`;
             } else {
                 bodyContent = `<div style="margin-top: 2px;">${parseInlineEmojis(msg.content)}</div>`;
             }
