@@ -134,7 +134,6 @@ io.on('connection', (socket) => {
         io.to(chatId).emit('new_message', { chatId, msg });
     });
 
-    // مدیریت خوانده شدن پیام‌ها (تیک دوم)
     socket.on('mark_messages_seen', ({ chatId, username }) => {
         const messages = db.messages[chatId];
         if (messages) {
