@@ -19,11 +19,27 @@
             --bubble-other: #ffffff; 
             --bubble-other-text: #0f172a;
         }
-        body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        [data-theme="dark"] {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #f8fafc;
+            --text-sec: #94a3b8;
+            --border-color: #334155;
+            --chat-bg: #090d16;
+            --bubble-owner: #334155;
+            --bubble-owner-text: #f8fafc;
+            --bubble-other: #1e293b;
+            --bubble-other-text: #f8fafc;
+        }
+
+        body { font-family: Tahoma, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
         .hidden { display: none !important; }
         
         .auth-box, .modal-box { background: var(--panel-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border: 1px solid var(--border-color); box-sizing: border-box; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; color: var(--text); box-sizing: border-box; font-size: 14px; outline: none; }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text); box-sizing: border-box; font-size: 14px; outline: none; }
         input:focus { border-color: var(--accent); }
         button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         button:hover { background: var(--accent-hover); }
@@ -42,28 +58,45 @@
         
         .message-bubble { max-width: 75%; padding: 10px 14px; border-radius: 14px; word-break: break-word; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border-color); user-select: none; }
         
-        .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; border-color: #fde047; }
+        .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; }
         .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
         
         .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; }
 
-        .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .replying-banner { padding: 8px 15px; background: #eff6ff; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
-        .typing-indicator-bar { padding: 4px 15px; font-size: 11px; color: var(--text-sec); font-style: italic; background: #f8fafc; min-height: 18px; }
+        .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative; }
+        .replying-banner { padding: 8px 15px; background: rgba(37,99,235,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
+        .typing-indicator-bar { padding: 4px 15px; font-size: 11px; color: var(--text-sec); font-style: italic; background: var(--panel-bg); min-height: 18px; }
 
         .input-bar { padding: 12px 15px; display: flex; gap: 8px; align-items: center; }
         .input-bar input { margin: 0; flex: 1; }
         
         .locked-banner { padding: 14px; background: #fef2f2; color: #991b1b; text-align: center; font-size: 13px; font-weight: bold; border-top: 1px solid #fecaca; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .locked-banner img { width: 22px; height: 22px; object-fit: cover; border-radius: 50%; vertical-align: middle; display: inline-block; }
+        .locked-banner img { width: 22px; height: 22px; object-fit: cover; border-radius: 50%; }
         
         .verified-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: #0ea5e9; color: #ffffff; border-radius: 50%; font-size: 10px; font-weight: bold; margin-right: 4px; vertical-align: middle; }
         
-        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; font-size: 16px; }
+        .avatar-container { position: relative; display: inline-block; flex-shrink: 0; }
+        .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 16px; }
         
-        .custom-context-menu { position: absolute; background: #ffffff; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
+        /* استایل نشانگر آنلاین/آفلاین */
+        .status-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--panel-bg); background: #94a3b8; }
+        .status-dot.online { background: #22c55e; }
+
+        /* ایموجی پیکر شناور */
+        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; }
+        .emoji-picker-box span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; }
+        .emoji-picker-box span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
+
+        /* ویس پلیر */
+        audio { height: 32px; max-width: 240px; margin-top: 4px; }
+
+        /* تیک دوم خوانده شدن پیام */
+        .msg-ticks { font-size: 11px; margin-right: 4px; letter-spacing: -3px; color: #94a3b8; display: inline-block; }
+        .msg-ticks.seen { color: #3b82f6; }
+
+        .custom-context-menu { position: absolute; background: var(--panel-bg); border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; z-index: 9999; display: none; flex-direction: column; min-width: 150px; }
         .context-menu-item { padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; color: var(--text); transition: 0.1s; }
-        .context-menu-item:hover { background: #f1f5f9; color: var(--accent); }
+        .context-menu-item:hover { background: rgba(0,0,0,0.05); color: var(--accent); }
         .context-menu-item.danger:hover { background: #fee2e2; color: #dc2626; }
         .context-reactions { display: flex; gap: 6px; padding: 4px 6px 8px 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px; justify-content: space-around; }
         .context-reactions span { cursor: pointer; font-size: 18px; transition: transform 0.1s; }
@@ -103,13 +136,17 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; cursor: pointer;" onclick="openEditProfileModal()" title="ویرایش پروفایل">
-                    <div id="sidebar-avatar" class="avatar-circle" style="width:36px; height:36px; font-size:14px;"></div>
+                    <div class="avatar-container">
+                        <div id="sidebar-avatar" class="avatar-circle" style="width:36px; height:36px; font-size:14px;"></div>
+                        <div class="status-dot online"></div>
+                    </div>
                     <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <h3 id="current-user-display" style="margin: 0; font-size: 13px;"></h3>
                     </div>
                 </div>
-                <div style="display: flex; gap: 5px;">
-                    <button style="width: auto; padding: 6px 10px; margin:0; font-size: 11px;" onclick="openCreateRoomModal()">+ گروه</button>
+                <div style="display: flex; gap: 4px;">
+                    <button style="width: auto; padding: 6px 8px; margin:0; font-size: 11px; background:#64748b;" onclick="toggleTheme()" title="تغییر تم">🌓</button>
+                    <button style="width: auto; padding: 6px 8px; margin:0; font-size: 11px;" onclick="openCreateRoomModal()">+ گروه</button>
                     <button title="خروج" style="width: auto; padding: 6px 8px; margin:0; background:#ef4444; font-size: 11px;" onclick="logout()">خروج</button>
                 </div>
             </div>
@@ -120,11 +157,11 @@
             <div class="chat-header">
                 <div id="active-chat-container" style="display: flex; align-items: center; gap: 8px;">گروه اصلی</div>
                 <div id="group-admin-actions" class="hidden">
-                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#2563eb;" onclick="openEditGroupModal()">⚙️ تنظیمات گروه</button>
+                    <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#2563eb;" onclick="openEditGroupModal()">⚙️ تنظیمات</button>
                 </div>
             </div>
 
-            <div class="messages-box" id="messages-box"></div>
+            <div class="messages-box" id="messages-box" onscroll="handleScrollMessages()"></div>
 
             <div class="input-container" id="input-container-box">
                 <div id="replying-banner" class="replying-banner hidden">
@@ -134,9 +171,27 @@
                 
                 <div id="typing-indicator" class="typing-indicator-bar"></div>
 
+                <!-- پنل ایموجی پیکر -->
+                <div id="emoji-picker" class="emoji-picker-box hidden">
+                    <span onclick="insertEmoji('😀')">😀</span>
+                    <span onclick="insertEmoji('😂')">😂</span>
+                    <span onclick="insertEmoji('😍')">😍</span>
+                    <span onclick="insertEmoji('🔥')">🔥</span>
+                    <span onclick="insertEmoji('👍')">👍</span>
+                    <span onclick="insertEmoji('❤️')">❤️</span>
+                    <span onclick="insertEmoji('🎉')">🎉</span>
+                    <span onclick="insertEmoji('✨')">✨</span>
+                    <span onclick="insertEmoji('🙏')">🙏</span>
+                    <span onclick="insertEmoji('😎')">😎</span>
+                    <span onclick="insertEmoji('😢')">😢</span>
+                    <span onclick="insertEmoji('💡')">💡</span>
+                </div>
+
                 <div class="input-bar" id="active-input-bar">
+                    <button style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleEmojiPicker()" title="ایموجی">😊</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." oninput="handleTypingInput()" onkeypress="if(event.key==='Enter') sendMessage()">
-                    <button style="width:75px; margin:0; height:40px;" onclick="sendMessage()">ارسال</button>
+                    <button id="voice-record-btn" style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleVoiceRecording()" title="ضبط صدا">🎤</button>
+                    <button style="width:70px; margin:0; height:38px;" onclick="sendMessage()">ارسال</button>
                 </div>
                 <div id="locked-group-banner" class="locked-banner hidden">
                     قفل گروه فعال است <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==" alt="icon">
@@ -191,12 +246,20 @@
         let typingTimeout = null;
         let isCurrentlyTyping = false;
 
+        // متغیرهای ضبط صدا
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 enterApp();
             }
+
+            const savedTheme = localStorage.getItem('e10_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
 
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('custom-context-menu');
@@ -205,6 +268,81 @@
                 }
             });
         };
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('e10_theme', next);
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emoji-picker');
+            picker.classList.toggle('hidden');
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('msg-input');
+            input.value += emoji;
+            input.focus();
+            toggleEmojiPicker();
+        }
+
+        // پخش صدای اعلان پیام جدید
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // نت ر
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        // ضبط صدای ویس
+        async function toggleVoiceRecording() {
+            const btn = document.getElementById('voice-record-btn');
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            socket.emit('send_message', {
+                                chatId: activeChatId,
+                                sender: currentUser.username,
+                                content: reader.result,
+                                type: 'voice',
+                                replyTo: replyingToMsg
+                            });
+                            cancelReply();
+                        };
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.style.color = '#ef4444';
+                    btn.title = "در حال ضبط... کلیک برای توقف";
+                } catch(err) {
+                    alert('دسترسی به میکروفون امکان‌پذیر نیست.');
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.style.color = 'var(--text)';
+                btn.title = "ضبط صدا";
+            }
+        }
 
         function toggleAuth(isReg) {
             document.getElementById('login-form').classList.toggle('hidden', isReg);
@@ -295,8 +433,11 @@
             chats.forEach(chat => {
                 let badge = chat.isVerified ? '<span class="verified-badge">✓</span>' : '';
                 list.innerHTML += `<div class="chat-item" onclick="selectRoom('${chat.id}')">
-                    <div class="avatar-circle">${chat.name.charAt(0)}</div>
-                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${chat.name}</b> ${badge}<br><small style="color:var(--text-sec)">گروه عمومی</small></div>
+                    <div class="avatar-container">
+                        <div class="avatar-circle">${chat.name.charAt(0)}</div>
+                        <div class="status-dot online"></div>
+                    </div>
+                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${chat.name}</b> ${badge}<br><small style="color:var(--text-sec)">آنلاین</small></div>
                 </div>`;
             });
         }
@@ -403,6 +544,7 @@
                 chatId: activeChatId, 
                 sender: currentUser.username, 
                 content: text, 
+                type: 'text',
                 replyTo: replyingToMsg 
             });
             document.getElementById('msg-input').value = '';
@@ -473,6 +615,14 @@
             socket.emit('toggle_reaction', { chatId: activeChatId, msgId, emoji, username: currentUser.username });
         }
 
+        // بررسی رویت پیام‌ها هنگام اسکرول
+        function handleScrollMessages() {
+            const box = document.getElementById('messages-box');
+            if (box.scrollTop + box.clientHeight >= box.scrollHeight - 30) {
+                socket.emit('mark_messages_seen', { chatId: activeChatId, username: currentUser.username });
+            }
+        }
+
         socket.on('message_deleted', ({ chatId, msgId }) => {
             if(chatId === activeChatId) {
                 const el = document.getElementById(msgId);
@@ -484,10 +634,18 @@
             const box = document.getElementById('messages-box');
             box.innerHTML = '';
             messages.forEach(m => appendMessage(m));
+            box.scrollTop = box.scrollHeight;
+            socket.emit('mark_messages_seen', { chatId: activeChatId, username: currentUser.username });
         });
 
         socket.on('new_message', ({ chatId, msg }) => {
-            if(chatId === activeChatId) appendMessage(msg);
+            if(chatId === activeChatId) {
+                appendMessage(msg);
+                if (msg.sender !== currentUser.username) {
+                    playNotificationSound();
+                    socket.emit('mark_messages_seen', { chatId: activeChatId, username: currentUser.username });
+                }
+            }
         });
 
         socket.on('message_updated', ({ chatId, msg }) => {
@@ -503,14 +661,19 @@
 
         function createMessageHTML(msg) {
             let badge = msg.isVerified ? '<span class="verified-badge">✓</span>' : '';
-            let contentHtml = escapeHtml(msg.content);
-            
             let isOwnerMsg = (msg.sender === 'kia12' || msg.sender === 'kiya12' || msg.isVerified);
             let bubbleClass = isOwnerMsg ? 'msg-owner' : 'msg-other';
 
             let replyHtml = '';
             if(msg.replyTo) {
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b> ${msg.replyTo.content}</div>`;
+            }
+
+            let bodyContent = '';
+            if (msg.type === 'voice') {
+                bodyContent = `<audio controls src="${msg.content}"></audio>`;
+            } else {
+                bodyContent = `<div style="margin-top: 2px;">${escapeHtml(msg.content)}</div>`;
             }
 
             let reactionsHtml = '';
@@ -527,13 +690,22 @@
                 reactionsHtml += '</div>';
             }
 
+            // مدیریت تیک دوم خوانده شده
+            let ticksHtml = '';
+            if (msg.sender === currentUser.username) {
+                let isSeen = msg.seenBy && msg.seenBy.length > 1; // بیشتر از خود فرستنده دیده باشند
+                ticksHtml = `<span class="msg-ticks ${isSeen ? 'seen' : ''}">✓✓</span>`;
+            }
+
             return `
-                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.content).replace(/'/g, "\\'")}')">
+                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.type === 'text' ? msg.content : '[پیام صوتی]').replace(/'/g, "\\'")}')">
                     ${replyHtml}
-                    <div><strong style="color: ${isOwnerMsg ? '#854d0e' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
-                    <div style="margin-top: 2px;">${contentHtml}</div>
+                    <div><strong style="color: ${isOwnerMsg ? 'var(--text)' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
+                    ${bodyContent}
                     ${reactionsHtml}
-                    <span style="font-size: 9px; opacity: 0.7; align-self: flex-end; margin-top: 2px;">${msg.time}</span>
+                    <div style="font-size: 9px; opacity: 0.7; align-self: flex-end; margin-top: 2px; display:flex; align-items:center; gap:2px;">
+                        <span>${msg.time}</span> ${ticksHtml}
+                    </div>
                 </div>`;
         }
 
