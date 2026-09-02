@@ -24,8 +24,32 @@ const db = {
     }  
 };
 
+// آرایه‌های گلوبال در حافظه سرور برای ذخیره ایموجی و استیکر کاستوم
+let globalCustomEmojis = [];
+let globalCustomStickers = [];
+
 io.on('connection', (socket) => {
     
+    // ارسال آخرین ایموجی و استیکرها به کاربر جدید به محض اتصال
+    socket.emit('sync_custom_emojis', globalCustomEmojis);
+    socket.emit('sync_custom_stickers', globalCustomStickers);
+
+    // افزودن ایموجی کاستوم جدید
+    socket.on('add_custom_emoji', (newEmoji) => {
+        if (!globalCustomEmojis.find(e => e.tag === newEmoji.tag)) {
+            globalCustomEmojis.push(newEmoji);
+        }
+        io.emit('sync_custom_emojis', globalCustomEmojis);
+    });
+
+    // افزودن استیکر کاستوم جدید
+    socket.on('add_custom_sticker', (stickerBase64) => {
+        if (!globalCustomStickers.includes(stickerBase64)) {
+            globalCustomStickers.push(stickerBase64);
+        }
+        io.emit('sync_custom_stickers', globalCustomStickers);
+    });
+
     socket.on('register', (data) => {
         const exists = db.users.find(u => u.username === data.username);
         if (exists) {
