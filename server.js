@@ -13,8 +13,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const db = {
     users: [
-        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true },
-        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true }
+        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '' },
+        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', avatar: '', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '' }
     ],
     chats: [
         { id: 'main_group', type: 'group', name: 'گروه اصلی مالک', admin: 'kia12', isVerified: true, isLocked: false }
@@ -24,17 +24,14 @@ const db = {
     }  
 };
 
-// آرایه‌های گلوبال در حافظه سرور برای ذخیره ایموجی و استیکر کاستوم
 let globalCustomEmojis = [];
 let globalCustomStickers = [];
 
 io.on('connection', (socket) => {
     
-    // ارسال آخرین ایموجی و استیکرها به کاربر جدید به محض اتصال
     socket.emit('sync_custom_emojis', globalCustomEmojis);
     socket.emit('sync_custom_stickers', globalCustomStickers);
 
-    // افزودن ایموجی کاستوم جدید
     socket.on('add_custom_emoji', (newEmoji) => {
         if (!globalCustomEmojis.find(e => e.tag === newEmoji.tag)) {
             globalCustomEmojis.push(newEmoji);
@@ -42,7 +39,6 @@ io.on('connection', (socket) => {
         io.emit('sync_custom_emojis', globalCustomEmojis);
     });
 
-    // افزودن استیکر کاستوم جدید
     socket.on('add_custom_sticker', (stickerBase64) => {
         if (!globalCustomStickers.includes(stickerBase64)) {
             globalCustomStickers.push(stickerBase64);
@@ -61,7 +57,9 @@ io.on('connection', (socket) => {
                 name: data.name,
                 avatar: '',
                 isVerified: false,
-                isOwner: data.username === 'kia12' || data.username === 'kiya12'
+                isOwner: data.username === 'kia12' || data.username === 'kiya12',
+                removeBlueTick: false,
+                customBadge: ''
             };
             db.users.push(newUser);
             socket.emit('auth_success', newUser);
@@ -80,7 +78,10 @@ io.on('connection', (socket) => {
     socket.on('update_profile', (data) => {
         const user = db.users.find(u => u.username === data.username);
         if (user) {
-            if (data.newName) user.name = data.newName;
+            if (data.newName !== undefined) user.name = data.newName;
+            if (data.removeBlueTick !== undefined) user.removeBlueTick = data.removeBlueTick;
+            if (data.customBadge !== undefined) user.customBadge = data.customBadge;
+            
             socket.emit('profile_updated', user);
         }
     });
@@ -138,19 +139,19 @@ io.on('connection', (socket) => {
         }
 
         if (!db.messages[chatId]) db.messages[chatId] = [];
-        
-        const isOwnerOrVerified = senderUser ? (senderUser.isOwner || senderUser.isVerified) : false;
 
         const msg = {
             id: 'msg_' + Date.now() + Math.random(),
             sender,
             senderName: senderUser ? senderUser.name : sender,
+            customBadge: senderUser ? senderUser.customBadge : '',
+            removeBlueTick: senderUser ? senderUser.removeBlueTick : false,
             content,
             type: type || 'text',
             replyTo: replyTo || null,
             reactions: {},
             seenBy: [sender],
-            isVerified: isOwnerOrVerified,
+            isVerified: senderUser ? (senderUser.isOwner || senderUser.isVerified) : false,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
         };
         
