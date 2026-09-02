@@ -44,15 +44,15 @@
         button { width: 100%; padding: 12px; margin: 10px 0; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         button:hover { background: var(--accent-hover); }
 
-        #app-container { display: flex; width: 100vw; height: 100vh; background: var(--bg-dark); }
+        #app-container { display: flex; width: 100vw; height: 100vh; background: var(--bg-dark); position: relative; overflow: hidden; }
         
-        .sidebar { width: 340px; background: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .sidebar { width: 340px; background: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; height: 100%; z-index: 2; }
         .sidebar-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         .chat-list { flex: 1; overflow-y: auto; }
         .chat-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
         .chat-item:hover { background: rgba(37, 99, 235, 0.05); }
         
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; height: 100%; z-index: 1; }
         .chat-header { padding: 12px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); font-weight: bold; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
         .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
@@ -114,10 +114,50 @@
         .reaction-pill { background: rgba(0,0,0,0.06); border-radius: 12px; padding: 2px 6px; font-size: 11px; display: flex; align-items: center; gap: 3px; cursor: pointer; border: 1px solid transparent; }
         .reaction-pill.active { background: #e0f2fe; border-color: #bae6fd; }
 
+        /* استایل اختصاصی موبایل دقیقاً مشابه تلگرام */
         @media(max-width: 768px) {
-            #app-container { flex-direction: column; }
-            .sidebar { width: 100%; height: 32vh; }
-            .chat-area { height: 68vh; }
+            .sidebar {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                transition: transform 0.3s ease;
+            }
+            .chat-area {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 5;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            }
+            /* کلاس فعال برای نمایش صفحه چت روی موبایل */
+            #app-container.mobile-chat-active .sidebar {
+                transform: translateX(-100%);
+            }
+            #app-container.mobile-chat-active .chat-area {
+                transform: translateX(0);
+                z-index: 15;
+            }
+            #back-to-chats-btn {
+                display: inline-block !important;
+            }
+        }
+
+        #back-to-chats-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px 0 8px;
+            margin: 0;
+            width: auto;
         }
     </style>
 </head>
@@ -163,7 +203,10 @@
 
         <div class="chat-area">
             <div class="chat-header">
-                <div id="active-chat-container" style="display: flex; align-items: center; gap: 8px;">گروه اصلی</div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <button id="back-to-chats-btn" onclick="backToChatsList()">➔</button>
+                    <div id="active-chat-container" style="display: flex; align-items: center; gap: 8px;">گروه اصلی</div>
+                </div>
                 <div id="group-admin-actions" class="hidden">
                     <button style="width:auto; padding:4px 10px; margin:0; font-size:11px; background:#2563eb;" onclick="openEditGroupModal()">⚙️ تنظیمات</button>
                 </div>
@@ -601,6 +644,15 @@
                 updateGroupLockUI();
             }
             socket.emit('join_room', id);
+
+            // در موبایل با کلیک روی چت، صفحه گفتگو باز می‌شود (مثل تلگرام)
+            if (window.innerWidth <= 768) {
+                document.getElementById('app-container').classList.add('mobile-chat-active');
+            }
+        }
+
+        function backToChatsList() {
+            document.getElementById('app-container').classList.remove('mobile-chat-active');
         }
 
         function updateGroupLockUI() {
@@ -678,7 +730,6 @@
             let text = textInput.value.trim();
             if(!text) return;
             
-            // تبدیل تگ‌های ایموجی کاستوم به تگ واقعی تصویر قبل از ارسال[cite: 2]
             if (typeof customInlineEmojis !== 'undefined' && Array.isArray(customInlineEmojis)) {
                 customInlineEmojis.forEach(item => {
                     let regex = new RegExp(escapeRegExp(item.tag), 'g');
