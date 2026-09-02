@@ -106,8 +106,8 @@
         .emoji-grid span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; }
         .emoji-grid span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
         
-        /* سایز بزرگ‌تر و مناسب‌تر برای ایموجی کاستوم درون متن و ریپلای */
-        .custom-inline-emoji { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; display: inline-block; cursor: pointer; border-radius: 4px; margin: 0 2px; }
+        /* سایز مناسب و بزرگ‌تر برای ایموجی کاستوم درون متن و ریپلای */
+        .custom-inline-emoji { width: 30px; height: 30px; object-fit: contain; vertical-align: middle; display: inline-block; cursor: pointer; border-radius: 4px; margin: 0 2px; }
 
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .sticker-item { width: 100%; height: 60px; object-fit: contain; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.02); transition: transform 0.1s; }
@@ -415,17 +415,39 @@
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onloadend = () => {
-                let tag = `[emoji:${customInlineEmojis.length}]`;
-                customInlineEmojis.push({ tag, src: reader.result });
+                let tag = `[emoji:${Date.now()}]`;
+                let newEmoji = { tag, src: reader.result };
+                
+                // ارسال به سرور برای همگام‌سازی در تمامی دستگاه‌ها
+                socket.emit('add_custom_emoji', newEmoji);
+                
+                // اضافه کردن محلی به دستگاه فعلی
+                customInlineEmojis.push(newEmoji);
                 localStorage.setItem('e10_custom_inline_emojis', JSON.stringify(customInlineEmojis));
                 renderCustomInlineEmojis();
                 
-                // به محض آپلود، مستقیماً به جای تگ، ایموجی تصویر را به متن اضافه می‌کنیم
                 const input = document.getElementById('msg-input');
                 input.value += tag;
                 input.focus();
             };
         }
+
+        // دریافت و همگام‌سازی لیست ایموجی‌های کاستوم از سرور
+        socket.on('sync_custom_emojis', (serverEmojis) => {
+            if (serverEmojis && Array.isArray(serverEmojis)) {
+                customInlineEmojis = serverEmojis;
+                localStorage.setItem('e10_custom_inline_emojis', JSON.stringify(customInlineEmojis));
+                renderCustomInlineEmojis();
+            }
+        });
+
+        socket.on('new_custom_emoji', (newEmoji) => {
+            if (!customInlineEmojis.find(e => e.tag === newEmoji.tag)) {
+                customInlineEmojis.push(newEmoji);
+                localStorage.setItem('e10_custom_inline_emojis', JSON.stringify(customInlineEmojis));
+                renderCustomInlineEmojis();
+            }
+        });
 
         function renderCustomInlineEmojis() {
             const grid = document.getElementById('emoji-grid-container');
@@ -444,7 +466,7 @@
                 <span onclick="insertEmojiText('💡')">💡</span>
             `;
             let customHtml = '';
-            customInlineEmojis.forEach((item, idx) => {
+            customInlineEmojis.forEach((item) => {
                 customHtml += `<span onclick="insertEmojiText('${item.tag}')"><img class="custom-inline-emoji" src="${item.src}" alt="emoji"></span>`;
             });
             grid.innerHTML = defaults + customHtml;
@@ -790,7 +812,6 @@
                     type: 'voice' 
                 };
             } else {
-                // پاکسازی کامل تگ‌های نام کاربری و اضافه کردن نسخه پرسرعت و تمیز ریپلای
                 let parsedContent = parseInlineEmojis(content);
                 let textPreview = parsedContent.length > 40 ? parsedContent.substring(0,40)+'...' : parsedContent;
                 replyingToMsg = { 
@@ -801,7 +822,6 @@
                 };
             }
             
-            // اصلاح بنر ریپلای برای حذف نام‌های اضافی و نمایش تمیز متن/ایموجی
             document.getElementById('reply-text-preview').innerHTML = `${replyingToMsg.content}`;
             document.getElementById('replying-banner').classList.remove('hidden');
         }
@@ -910,7 +930,6 @@
                     ? `<img src="${msg.replyTo.content}" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
                     : parseInlineEmojis(msg.replyTo.content);
                 
-                // حذف نام کاربر از بالای متن ریپلای شده جهت جلوگیری از تکرار متن اضافی
                 replyHtml = `<div class="reply-preview-box">${replyContentDisplay}</div>`;
             }
 
