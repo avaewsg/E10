@@ -13,8 +13,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const db = {
     users: [
-        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '' },
-        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '' }
+        { username: 'kia12', password: 'kia12', name: 'مالک اصلی', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '', avatar: '' },
+        { username: 'kiya12', password: 'kiya12', name: 'مالک اصلی', isVerified: true, isOwner: true, removeBlueTick: false, customBadge: '', avatar: '' }
     ],
     groupState: {
         isLocked: false
@@ -57,7 +57,8 @@ io.on('connection', (socket) => {
                 isVerified: isOwnerAcc,
                 isOwner: isOwnerAcc,
                 removeBlueTick: false,
-                customBadge: ''
+                customBadge: '',
+                avatar: data.avatar || ''
             };
             db.users.push(newUser);
             socket.emit('auth_success', newUser);
@@ -79,6 +80,7 @@ io.on('connection', (socket) => {
             if (data.newName !== undefined) user.name = data.newName;
             if (data.removeBlueTick !== undefined) user.removeBlueTick = data.removeBlueTick;
             if (data.customBadge !== undefined) user.customBadge = data.customBadge;
+            if (data.avatar !== undefined) user.avatar = data.avatar;
             if (data.isLocked !== undefined) db.groupState.isLocked = data.isLocked;
             
             io.emit('settings_updated', { updatedUser: user, isLocked: db.groupState.isLocked });
@@ -106,6 +108,7 @@ io.on('connection', (socket) => {
             id: 'msg_' + Date.now() + Math.random(),
             sender,
             senderName: senderUser ? senderUser.name : sender,
+            senderAvatar: senderUser ? senderUser.avatar : '',
             customBadge: senderUser ? senderUser.customBadge : '',
             removeBlueTick: senderUser ? senderUser.removeBlueTick : false,
             isOwner: senderUser ? senderUser.isOwner : false,
