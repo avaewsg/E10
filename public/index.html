@@ -78,19 +78,28 @@
         .avatar-container { position: relative; display: inline-block; flex-shrink: 0; }
         .avatar-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 16px; }
         
-        /* استایل نشانگر آنلاین/آفلاین */
         .status-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--panel-bg); background: #94a3b8; }
         .status-dot.online { background: #22c55e; }
 
-        /* ایموجی پیکر شناور */
-        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; }
-        .emoji-picker-box span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; }
-        .emoji-picker-box span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
+        /* پنل ایموجی و استیکر */
+        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 280px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; display: flex; flex-direction: column; }
+        .emoji-tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-dark); border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .emoji-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; font-weight: bold; color: var(--text-sec); }
+        .emoji-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--panel-bg); }
+        
+        .emoji-content-pane { padding: 10px; max-height: 160px; overflow-y: auto; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        .emoji-grid span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; }
+        .emoji-grid span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
 
-        /* ویس پلیر */
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .sticker-item { width: 100%; height: 60px; object-fit: contain; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.02); transition: transform 0.1s; }
+        .sticker-item:hover { transform: scale(1.05); border-color: var(--accent); }
+
+        /* ویس پلیر و استیکر در پیام */
         audio { height: 32px; max-width: 240px; margin-top: 4px; }
+        .message-sticker { max-width: 140px; max-height: 140px; object-fit: contain; border-radius: 8px; margin-top: 2px; }
 
-        /* تیک دوم خوانده شدن پیام */
         .msg-ticks { font-size: 11px; margin-right: 4px; letter-spacing: -3px; color: #94a3b8; display: inline-block; }
         .msg-ticks.seen { color: #3b82f6; }
 
@@ -171,24 +180,44 @@
                 
                 <div id="typing-indicator" class="typing-indicator-bar"></div>
 
-                <!-- پنل ایموجی پیکر -->
+                <!-- پنل ایموجی و استیکر سفارشی -->
                 <div id="emoji-picker" class="emoji-picker-box hidden">
-                    <span onclick="insertEmoji('😀')">😀</span>
-                    <span onclick="insertEmoji('😂')">😂</span>
-                    <span onclick="insertEmoji('😍')">😍</span>
-                    <span onclick="insertEmoji('🔥')">🔥</span>
-                    <span onclick="insertEmoji('👍')">👍</span>
-                    <span onclick="insertEmoji('❤️')">❤️</span>
-                    <span onclick="insertEmoji('🎉')">🎉</span>
-                    <span onclick="insertEmoji('✨')">✨</span>
-                    <span onclick="insertEmoji('🙏')">🙏</span>
-                    <span onclick="insertEmoji('😎')">😎</span>
-                    <span onclick="insertEmoji('😢')">😢</span>
-                    <span onclick="insertEmoji('💡')">💡</span>
+                    <div class="emoji-tabs">
+                        <div id="tab-emoji-btn" class="emoji-tab active" onclick="switchEmojiTab('emoji')">😊 ایموجی</div>
+                        <div id="tab-sticker-btn" class="emoji-tab" onclick="switchEmojiTab('sticker')">🖼️ استیکرها</div>
+                    </div>
+                    
+                    <div id="pane-emoji" class="emoji-content-pane">
+                        <div class="emoji-grid">
+                            <span onclick="insertEmoji('😀')">😀</span>
+                            <span onclick="insertEmoji('😂')">😂</span>
+                            <span onclick="insertEmoji('😍')">😍</span>
+                            <span onclick="insertEmoji('🔥')">🔥</span>
+                            <span onclick="insertEmoji('👍')">👍</span>
+                            <span onclick="insertEmoji('❤️')">❤️</span>
+                            <span onclick="insertEmoji('🎉')">🎉</span>
+                            <span onclick="insertEmoji('✨')">✨</span>
+                            <span onclick="insertEmoji('🙏')">🙏</span>
+                            <span onclick="insertEmoji('😎')">😎</span>
+                            <span onclick="insertEmoji('😢')">😢</span>
+                            <span onclick="insertEmoji('💡')">💡</span>
+                        </div>
+                    </div>
+
+                    <div id="pane-sticker" class="emoji-content-pane hidden">
+                        <div style="margin-bottom: 8px;">
+                            <input type="file" id="sticker-file-input" accept="image/*" style="display:none;" onchange="uploadCustomSticker(event)">
+                            <button style="padding: 6px; font-size: 11px; margin: 0;" onclick="document.getElementById('sticker-file-input').click()">+ افزودن استیکر جدید</button>
+                        </div>
+                        <div class="sticker-grid" id="custom-stickers-grid">
+                            <!-- استیکر پیش‌فرض اولیه (پپو خندان) -->
+                            <img class="sticker-item" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==" alt="sticker" onclick="sendSticker('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==')">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="input-bar" id="active-input-bar">
-                    <button style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleEmojiPicker()" title="ایموجی">😊</button>
+                    <button style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleEmojiPicker()" title="ایموجی و استیکر">😊</button>
                     <input type="text" id="msg-input" placeholder="پیام خود را بنویسید..." oninput="handleTypingInput()" onkeypress="if(event.key==='Enter') sendMessage()">
                     <button id="voice-record-btn" style="width:38px; height:38px; margin:0; background:transparent; color:var(--text); font-size:18px;" onclick="toggleVoiceRecording()" title="ضبط صدا">🎤</button>
                     <button style="width:70px; margin:0; height:38px;" onclick="sendMessage()">ارسال</button>
@@ -246,10 +275,14 @@
         let typingTimeout = null;
         let isCurrentlyTyping = false;
 
-        // متغیرهای ضبط صدا
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
+
+        // لیست استیکرهای سفارشی کاربر (شامل استیکر پیش‌فرض پپو)
+        let customStickers = [
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ=="
+        ];
 
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
@@ -260,6 +293,12 @@
 
             const savedTheme = localStorage.getItem('e10_theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const savedStickers = localStorage.getItem('e10_custom_stickers');
+            if (savedStickers) {
+                try { customStickers = JSON.parse(savedStickers); } catch(e) {}
+            }
+            renderCustomStickers();
 
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('custom-context-menu');
@@ -281,6 +320,25 @@
             picker.classList.toggle('hidden');
         }
 
+        function switchEmojiTab(tab) {
+            const emojiBtn = document.getElementById('tab-emoji-btn');
+            const stickerBtn = document.getElementById('tab-sticker-btn');
+            const emojiPane = document.getElementById('pane-emoji');
+            const stickerPane = document.getElementById('pane-sticker');
+
+            if (tab === 'emoji') {
+                emojiBtn.classList.add('active');
+                stickerBtn.classList.remove('active');
+                emojiPane.classList.remove('hidden');
+                stickerPane.classList.add('hidden');
+            } else {
+                stickerBtn.classList.add('active');
+                emojiBtn.classList.remove('active');
+                stickerPane.classList.remove('hidden');
+                emojiPane.classList.add('hidden');
+            }
+        }
+
         function insertEmoji(emoji) {
             const input = document.getElementById('msg-input');
             input.value += emoji;
@@ -288,14 +346,45 @@
             toggleEmojiPicker();
         }
 
-        // پخش صدای اعلان پیام جدید
+        function uploadCustomSticker(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+                customStickers.push(reader.result);
+                localStorage.setItem('e10_custom_stickers', JSON.stringify(customStickers));
+                renderCustomStickers();
+            };
+        }
+
+        function renderCustomStickers() {
+            const grid = document.getElementById('custom-stickers-grid');
+            grid.innerHTML = '';
+            customStickers.forEach(src => {
+                grid.innerHTML += `<img class="sticker-item" src="${src}" alt="sticker" onclick="sendSticker('${src}')">`;
+            });
+        }
+
+        function sendSticker(base64Data) {
+            socket.emit('send_message', {
+                chatId: activeChatId,
+                sender: currentUser.username,
+                content: base64Data,
+                type: 'sticker',
+                replyTo: replyingToMsg
+            });
+            cancelReply();
+            toggleEmojiPicker();
+        }
+
         function playNotificationSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // نت ر
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
                 osc.connect(gain);
@@ -305,7 +394,6 @@
             } catch(e) {}
         }
 
-        // ضبط صدای ویس
         async function toggleVoiceRecording() {
             const btn = document.getElementById('voice-record-btn');
             if (!isRecording) {
@@ -615,7 +703,6 @@
             socket.emit('toggle_reaction', { chatId: activeChatId, msgId, emoji, username: currentUser.username });
         }
 
-        // بررسی رویت پیام‌ها هنگام اسکرول
         function handleScrollMessages() {
             const box = document.getElementById('messages-box');
             if (box.scrollTop + box.clientHeight >= box.scrollHeight - 30) {
@@ -672,6 +759,8 @@
             let bodyContent = '';
             if (msg.type === 'voice') {
                 bodyContent = `<audio controls src="${msg.content}"></audio>`;
+            } else if (msg.type === 'sticker') {
+                bodyContent = `<img class="message-sticker" src="${msg.content}" alt="sticker">`;
             } else {
                 bodyContent = `<div style="margin-top: 2px;">${escapeHtml(msg.content)}</div>`;
             }
@@ -690,15 +779,14 @@
                 reactionsHtml += '</div>';
             }
 
-            // مدیریت تیک دوم خوانده شده
             let ticksHtml = '';
             if (msg.sender === currentUser.username) {
-                let isSeen = msg.seenBy && msg.seenBy.length > 1; // بیشتر از خود فرستنده دیده باشند
+                let isSeen = msg.seenBy && msg.seenBy.length > 1;
                 ticksHtml = `<span class="msg-ticks ${isSeen ? 'seen' : ''}">✓✓</span>`;
             }
 
             return `
-                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.type === 'text' ? msg.content : '[پیام صوتی]').replace(/'/g, "\\'")}')">
+                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.type === 'text' ? msg.content : '[استیکر/صدا]').replace(/'/g, "\\'")}')">
                     ${replyHtml}
                     <div><strong style="color: ${isOwnerMsg ? 'var(--text)' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
                     ${bodyContent}
