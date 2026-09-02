@@ -81,15 +81,16 @@
         .status-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--panel-bg); background: #94a3b8; }
         .status-dot.online { background: #22c55e; }
 
-        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 280px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; display: flex; flex-direction: column; }
+        .emoji-picker-box { position: absolute; bottom: 65px; right: 15px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 99; display: flex; flex-direction: column; }
         .emoji-tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-dark); border-top-left-radius: 12px; border-top-right-radius: 12px; }
-        .emoji-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; cursor: pointer; font-weight: bold; color: var(--text-sec); }
+        .emoji-tab { flex: 1; padding: 8px; text-align: center; font-size: 12px; cursor: pointer; font-weight: bold; color: var(--text-sec); }
         .emoji-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); background: var(--panel-bg); }
         
-        .emoji-content-pane { padding: 10px; max-height: 160px; overflow-y: auto; }
+        .emoji-content-pane { padding: 10px; max-height: 180px; overflow-y: auto; }
         .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-        .emoji-grid span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; }
+        .emoji-grid span { font-size: 20px; cursor: pointer; text-align: center; padding: 4px; border-radius: 6px; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; }
         .emoji-grid span:hover { background: rgba(0,0,0,0.05); transform: scale(1.2); }
+        .custom-inline-emoji { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; display: inline-block; cursor: pointer; border-radius: 4px; }
 
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .sticker-item { width: 100%; height: 60px; object-fit: contain; cursor: pointer; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.02); transition: transform 0.1s; }
@@ -180,24 +181,28 @@
 
                 <div id="emoji-picker" class="emoji-picker-box hidden">
                     <div class="emoji-tabs">
-                        <div id="tab-emoji-btn" class="emoji-tab active" onclick="switchEmojiTab('emoji')">😊 ایموجی</div>
+                        <div id="tab-emoji-btn" class="emoji-tab active" onclick="switchEmojiTab('emoji')">😊 ایموجی‌ها</div>
                         <div id="tab-sticker-btn" class="emoji-tab" onclick="switchEmojiTab('sticker')">🖼️ استیکرها</div>
                     </div>
                     
                     <div id="pane-emoji" class="emoji-content-pane">
-                        <div class="emoji-grid">
-                            <span onclick="insertEmoji('😀')">😀</span>
-                            <span onclick="insertEmoji('😂')">😂</span>
-                            <span onclick="insertEmoji('😍')">😍</span>
-                            <span onclick="insertEmoji('🔥')">🔥</span>
-                            <span onclick="insertEmoji('👍')">👍</span>
-                            <span onclick="insertEmoji('❤️')">❤️</span>
-                            <span onclick="insertEmoji('🎉')">🎉</span>
-                            <span onclick="insertEmoji('✨')">✨</span>
-                            <span onclick="insertEmoji('🙏')">🙏</span>
-                            <span onclick="insertEmoji('😎')">😎</span>
-                            <span onclick="insertEmoji('😢')">😢</span>
-                            <span onclick="insertEmoji('💡')">💡</span>
+                        <div style="margin-bottom: 6px;">
+                            <input type="file" id="inline-emoji-file-input" accept="image/*" style="display:none;" onchange="uploadCustomInlineEmoji(event)">
+                            <button style="padding: 4px; font-size: 11px; margin: 0; background: var(--text-sec);" onclick="document.getElementById('inline-emoji-file-input').click()">+ افزودن ایموجی کاستوم</button>
+                        </div>
+                        <div class="emoji-grid" id="emoji-grid-container">
+                            <span onclick="insertEmojiText('😀')">😀</span>
+                            <span onclick="insertEmojiText('😂')">😂</span>
+                            <span onclick="insertEmojiText('😍')">😍</span>
+                            <span onclick="insertEmojiText('🔥')">🔥</span>
+                            <span onclick="insertEmojiText('👍')">👍</span>
+                            <span onclick="insertEmojiText('❤️')">❤️</span>
+                            <span onclick="insertEmojiText('🎉')">🎉</span>
+                            <span onclick="insertEmojiText('✨')">✨</span>
+                            <span onclick="insertEmojiText('🙏')">🙏</span>
+                            <span onclick="insertEmojiText('😎')">😎</span>
+                            <span onclick="insertEmojiText('😢')">😢</span>
+                            <span onclick="insertEmojiText('💡')">💡</span>
                         </div>
                     </div>
 
@@ -206,9 +211,7 @@
                             <input type="file" id="sticker-file-input" accept="image/*" style="display:none;" onchange="uploadCustomSticker(event)">
                             <button style="padding: 6px; font-size: 11px; margin: 0;" onclick="document.getElementById('sticker-file-input').click()">+ افزودن استیکر جدید</button>
                         </div>
-                        <div class="sticker-grid" id="custom-stickers-grid">
-                            <img class="sticker-item" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==" alt="sticker" onclick="sendSticker('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ==')">
-                        </div>
+                        <div class="sticker-grid" id="custom-stickers-grid"></div>
                     </div>
                 </div>
 
@@ -279,6 +282,8 @@
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ=="
         ];
 
+        let customInlineEmojis = [];
+
         window.onload = () => {
             const savedUser = localStorage.getItem('e10_user');
             if (savedUser) {
@@ -294,6 +299,12 @@
                 try { customStickers = JSON.parse(savedStickers); } catch(e) {}
             }
             renderCustomStickers();
+
+            const savedInlineEmojis = localStorage.getItem('e10_custom_inline_emojis');
+            if (savedInlineEmojis) {
+                try { customInlineEmojis = JSON.parse(savedInlineEmojis); } catch(e) {}
+            }
+            renderCustomInlineEmojis();
 
             document.addEventListener('click', (e) => {
                 const menu = document.getElementById('custom-context-menu');
@@ -334,11 +345,61 @@
             }
         }
 
-        function insertEmoji(emoji) {
+        function insertEmojiText(val) {
             const input = document.getElementById('msg-input');
-            input.value += emoji;
+            input.value += val;
             input.focus();
-            toggleEmojiPicker();
+        }
+
+        function uploadCustomInlineEmoji(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+                let tag = `[emoji:${customInlineEmojis.length}]`;
+                customInlineEmojis.push({ tag, src: reader.result });
+                localStorage.setItem('e10_custom_inline_emojis', JSON.stringify(customInlineEmojis));
+                renderCustomInlineEmojis();
+            };
+        }
+
+        function renderCustomInlineEmojis() {
+            const grid = document.getElementById('emoji-grid-container');
+            // پاکسازی کاستوم ایموجی‌های قبلی از لیست و بازسازی
+            const defaults = `
+                <span onclick="insertEmojiText('😀')">😀</span>
+                <span onclick="insertEmojiText('😂')">😂</span>
+                <span onclick="insertEmojiText('😍')">😍</span>
+                <span onclick="insertEmojiText('🔥')">🔥</span>
+                <span onclick="insertEmojiText('👍')">👍</span>
+                <span onclick="insertEmojiText('❤️')">❤️</span>
+                <span onclick="insertEmojiText('🎉')">🎉</span>
+                <span onclick="insertEmojiText('✨')">✨</span>
+                <span onclick="insertEmojiText('🙏')">🙏</span>
+                <span onclick="insertEmojiText('😎')">😎</span>
+                <span onclick="insertEmojiText('😢')">😢</span>
+                <span onclick="insertEmojiText('💡')">💡</span>
+            `;
+            let customHtml = '';
+            customInlineEmojis.forEach((item, idx) => {
+                customHtml += `<span onclick="insertEmojiText('${item.tag}')"><img class="custom-inline-emoji" src="${item.src}" alt="emoji"></span>`;
+            });
+            grid.innerHTML = defaults + customHtml;
+        }
+
+        function parseInlineEmojis(text) {
+            if(typeof text !== 'string') return text;
+            let result = escapeHtml(text);
+            customInlineEmojis.forEach(item => {
+                let regex = new RegExp(escapeRegExp(item.tag), 'g');
+                result = result.replace(regex, `<img class="custom-inline-emoji" src="${item.src}" alt="emoji">`);
+            });
+            return result;
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
         function uploadCustomSticker(event) {
@@ -658,11 +719,12 @@
                     type: 'voice' 
                 };
             } else {
-                let textPreview = content.length > 30 ? content.substring(0,30)+'...' : content;
+                let parsedContent = parseInlineEmojis(content);
+                let textPreview = parsedContent.length > 40 ? parsedContent.substring(0,40)+'...' : parsedContent;
                 replyingToMsg = { 
                     id: msgId, 
                     senderName, 
-                    content: escapeHtml(textPreview), 
+                    content: textPreview, 
                     type: 'text' 
                 };
             }
@@ -770,10 +832,9 @@
 
             let replyHtml = '';
             if(msg.replyTo) {
-                // اگر نوع پیام ریپلای شده استیکر باشد، محتوا مستقیماً به عنوان تگ عکس رندر می‌شود
                 let replyContentDisplay = msg.replyTo.type === 'sticker' 
                     ? `<img src="${msg.replyTo.content}" style="width:20px; height:20px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
-                    : msg.replyTo.content;
+                    : parseInlineEmojis(msg.replyTo.content);
                 
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b>&nbsp;${replyContentDisplay}</div>`;
             }
@@ -784,7 +845,7 @@
             } else if (msg.type === 'sticker') {
                 bodyContent = `<img class="message-sticker" src="${msg.content}" alt="sticker">`;
             } else {
-                bodyContent = `<div style="margin-top: 2px;">${escapeHtml(msg.content)}</div>`;
+                bodyContent = `<div style="margin-top: 2px;">${parseInlineEmojis(msg.content)}</div>`;
             }
 
             let reactionsHtml = '';
@@ -807,7 +868,7 @@
                 ticksHtml = `<span class="msg-ticks ${isSeen ? 'seen' : ''}">✓✓</span>`;
             }
 
-            let safeContentForContext = msg.type === 'text' ? escapeHtml(msg.content).replace(/'/g, "\\'") : msg.content;
+            let safeContentForContext = msg.type === 'text' ? msg.content.replace(/'/g, "\\'") : msg.content;
 
             return `
                 <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${safeContentForContext}', '${msg.type}')">
