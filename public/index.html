@@ -366,7 +366,6 @@
 
         function renderCustomInlineEmojis() {
             const grid = document.getElementById('emoji-grid-container');
-            // پاکسازی کاستوم ایموجی‌های قبلی از لیست و بازسازی
             const defaults = `
                 <span onclick="insertEmojiText('😀')">😀</span>
                 <span onclick="insertEmojiText('😂')">😂</span>
@@ -675,8 +674,17 @@
         }
 
         function sendMessage() {
-            const text = document.getElementById('msg-input').value.trim();
+            const textInput = document.getElementById('msg-input');
+            let text = textInput.value.trim();
             if(!text) return;
+            
+            // تبدیل تگ‌های ایموجی کاستوم به تگ واقعی تصویر قبل از ارسال[cite: 2]
+            if (typeof customInlineEmojis !== 'undefined' && Array.isArray(customInlineEmojis)) {
+                customInlineEmojis.forEach(item => {
+                    let regex = new RegExp(escapeRegExp(item.tag), 'g');
+                    text = text.replace(regex, `<img class="custom-inline-emoji" src="${item.src}" alt="emoji">`);
+                });
+            }
             
             if (isCurrentlyTyping) {
                 isCurrentlyTyping = false;
@@ -691,7 +699,7 @@
                 type: 'text',
                 replyTo: replyingToMsg 
             });
-            document.getElementById('msg-input').value = '';
+            textInput.value = '';
             cancelReply();
         }
 
@@ -834,7 +842,7 @@
             if(msg.replyTo) {
                 let replyContentDisplay = msg.replyTo.type === 'sticker' 
                     ? `<img src="${msg.replyTo.content}" style="width:20px; height:20px; object-fit:contain; vertical-align:middle; border-radius:3px; display:inline-block;">` 
-                    : parseInlineEmojis(msg.replyTo.content);
+                    : msg.replyTo.content;
                 
                 replyHtml = `<div class="reply-preview-box"><b>${msg.replyTo.senderName}:</b>&nbsp;${replyContentDisplay}</div>`;
             }
@@ -845,7 +853,7 @@
             } else if (msg.type === 'sticker') {
                 bodyContent = `<img class="message-sticker" src="${msg.content}" alt="sticker">`;
             } else {
-                bodyContent = `<div style="margin-top: 2px;">${parseInlineEmojis(msg.content)}</div>`;
+                bodyContent = `<div style="margin-top: 2px;">${msg.content}</div>`;
             }
 
             let reactionsHtml = '';
