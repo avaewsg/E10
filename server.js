@@ -31,17 +31,21 @@ io.on('connection', (socket) => {
     socket.emit('sync_custom_stickers', globalCustomStickers);
 
     socket.on('add_custom_emoji', (newEmoji) => {
-        if (!globalCustomEmojis.find(e => e.tag === newEmoji.tag)) {
-            globalCustomEmojis.push(newEmoji);
+        if (newEmoji && newEmoji.tag && newEmoji.src) {
+            if (!globalCustomEmojis.find(e => e.tag === newEmoji.tag)) {
+                globalCustomEmojis.push(newEmoji);
+            }
+            io.emit('sync_custom_emojis', globalCustomEmojis);
         }
-        io.emit('sync_custom_emojis', globalCustomEmojis);
     });
 
     socket.on('add_custom_sticker', (stickerBase64) => {
-        if (!globalCustomStickers.includes(stickerBase64)) {
-            globalCustomStickers.push(stickerBase64);
+        if (stickerBase64) {
+            if (!globalCustomStickers.includes(stickerBase64)) {
+                globalCustomStickers.push(stickerBase64);
+            }
+            io.emit('sync_custom_stickers', globalCustomStickers);
         }
-        io.emit('sync_custom_stickers', globalCustomStickers);
     });
 
     socket.on('register', (data) => {
@@ -181,5 +185,5 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.00 || process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => console.log(`E10 Server running on port ${PORT}`));
