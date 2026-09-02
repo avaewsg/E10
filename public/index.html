@@ -61,7 +61,7 @@
         .msg-owner { background: var(--bubble-owner); color: var(--bubble-owner-text); align-self: flex-start; border-top-right-radius: 4px; }
         .msg-other { background: var(--bubble-other); color: var(--bubble-other-text); align-self: flex-start; border-top-left-radius: 4px; }
         
-        .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; }
+        .reply-preview-box { background: rgba(0,0,0,0.05); padding: 5px 8px; border-right: 3px solid var(--accent); border-radius: 4px; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
 
         .input-container { background: var(--panel-bg); border-top: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative; }
         .replying-banner { padding: 8px 15px; background: rgba(37,99,235,0.1); display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-bottom: 1px solid var(--border-color); color: var(--accent); }
@@ -279,7 +279,6 @@
         let audioChunks = [];
         let isRecording = false;
 
-        // لیست استیکرهای سفارشی کاربر (شامل استیکر پیش‌فرض پپو)
         let customStickers = [
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAEdJREFUaIHv1cENACAMBED13z0zL0jQvI7g5eF+k229tWfPnwH8j/gDIBEBEBEBEREQEQERERAREQEQEQEREBEDERERERERgIggEQ=="
         ];
@@ -647,9 +646,14 @@
             document.getElementById('typing-indicator').innerText = '';
         });
 
-        function setReply(msgId, senderName, content) {
-            replyingToMsg = { id: msgId, senderName, content: content.length > 30 ? content.substring(0,30)+'...' : content };
-            document.getElementById('reply-text-preview').innerText = `${senderName}: ${replyingToMsg.content}`;
+        function setReply(msgId, senderName, content, type) {
+            if (type === 'sticker') {
+                replyingToMsg = { id: msgId, senderName, content: `<img src="${content}" style="width:22px; height:22px; object-fit:contain; vertical-align:middle; border-radius:4px;">`, type: 'sticker' };
+            } else {
+                let textPreview = content.length > 30 ? content.substring(0,30)+'...' : content;
+                replyingToMsg = { id: msgId, senderName, content: escapeHtml(textPreview), type: 'text' };
+            }
+            document.getElementById('reply-text-preview').innerHTML = `<b>${senderName}:</b> ${replyingToMsg.content}`;
             document.getElementById('replying-banner').classList.remove('hidden');
         }
 
@@ -658,9 +662,9 @@
             document.getElementById('replying-banner').classList.add('hidden');
         }
 
-        function handleMessageContextMenu(e, msgId, senderUsername, senderName, content) {
+        function handleMessageContextMenu(e, msgId, senderUsername, senderName, content, type) {
             e.preventDefault();
-            selectedMsgForContext = { id: msgId, sender: senderUsername, senderName, content };
+            selectedMsgForContext = { id: msgId, sender: senderUsername, senderName, content, type };
             
             const menu = document.getElementById('custom-context-menu');
             const deleteBtn = document.getElementById('context-delete-btn');
@@ -678,7 +682,7 @@
 
         function contextReply() {
             if (selectedMsgForContext) {
-                setReply(selectedMsgForContext.id, selectedMsgForContext.senderName, selectedMsgForContext.content);
+                setReply(selectedMsgForContext.id, selectedMsgForContext.senderName, selectedMsgForContext.content, selectedMsgForContext.type);
             }
             document.getElementById('custom-context-menu').style.display = 'none';
         }
@@ -785,8 +789,10 @@
                 ticksHtml = `<span class="msg-ticks ${isSeen ? 'seen' : ''}">✓✓</span>`;
             }
 
+            let safeContentForContext = msg.type === 'text' ? escapeHtml(msg.content).replace(/'/g, "\\'") : msg.content;
+
             return `
-                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${escapeHtml(msg.type === 'text' ? msg.content : '[استیکر/صدا]').replace(/'/g, "\\'")}')">
+                <div id="${msg.id}" class="message-bubble ${bubbleClass}" oncontextmenu="handleMessageContextMenu(event, '${msg.id}', '${msg.sender}', '${msg.senderName}', '${safeContentForContext}', '${msg.type}')">
                     ${replyHtml}
                     <div><strong style="color: ${isOwnerMsg ? 'var(--text)' : 'var(--accent)'};">${msg.senderName}</strong> ${badge}</div>
                     ${bodyContent}
