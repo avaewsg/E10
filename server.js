@@ -95,6 +95,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('typing_start', ({ chatId, username }) => {
+        socket.to(chatId).emit('display_typing', { username });
+    });
+
+    socket.on('typing_stop', ({ chatId, username }) => {
+        socket.to(chatId).emit('hide_typing', { username });
+    });
+
     socket.on('send_message', (data) => {
         const { chatId, sender, content, replyTo } = data;
         const chat = db.chats.find(c => c.id === chatId);
@@ -116,7 +124,7 @@ io.on('connection', (socket) => {
             content,
             type: 'text',
             replyTo: replyTo || null,
-            reactions: {}, // ساختار ذخیره ریکشن‌ها
+            reactions: {},
             isVerified: isOwnerOrVerified,
             time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })
         };
@@ -125,24 +133,30 @@ io.on('connection', (socket) => {
         io.to(chatId).emit('new_message', { chatId, msg });
     });
 
-    // مدیریت ثبت یا برداشتن ریکشن روی پیام
+    // مدیریت انحصاری تک‌ریاکشن برای هر کاربر روی هر پیام
     socket.on('toggle_reaction', ({ chatId, msgId, emoji, username }) => {
         const messages = db.messages[chatId];
         if (messages) {
             const msg = messages.find(m => m.id === msgId);
             if (msg) {
                 if (!msg.reactions) msg.reactions = {};
-                if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
 
-                const userIndex = msg.reactions[emoji].indexOf(username);
-                if (userIndex > -1) {
-                    // اگر کاربر قبلا این ریکشن رو داده بود، حذفش کن
-                    msg.reactions[emoji].splice(userIndex, 1);
-                    if (msg.reactions[emoji].length === 0) {
-                        delete msg.reactions[emoji];
+                let alreadyHasThisEmoji = false;
+                if (msg.reactions[emoji] && msg.reactions[emoji].includes(username)) {
+                    alreadyHasThisEmoji = true;
+                }
+
+                // پاک کردن تمام واکنش‌های قبلی این کاربر روی این پیام
+                for (const key of Object.keys(msg.reactions)) {
+                    msg.reactions[key] = msg.reactions[key].filter(u => u !== username);
+                    if (msg.reactions[key].length === 0) {
+                        delete msg.reactions[key];
                     }
-                } else {
-                    // در غیر این صورت اضافه کن
+                }
+
+                // اگر روی ایموجی جدیدی کلیک کرده، آن را ثبت کن (اگر روی همان قبلی کلیک کرده بود فقط پاک می‌شود)
+                if (!alreadyHasThisEmoji) {
+                    if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
                     msg.reactions[emoji].push(username);
                 }
 
@@ -157,7 +171,6 @@ io.on('connection', (socket) => {
             const index = messages.findIndex(m => m.id === msgId);
             if (index !== -1) {
                 const user = db.users.find(u => u.username === username);
-                // بررسی سطح دسترسی: کاربر پیام خودش را پاک کند یا مالک هر پیامی را پاک کند
                 if (messages[index].sender === username || (user && user.isOwner)) {
                     messages.splice(index, 1);
                     io.to(chatId).emit('message_deleted', { chatId, msgId });
@@ -169,7 +182,7 @@ io.on('connection', (socket) => {
     socket.on('join_room', (chatId) => {
         socket.join(chatId);
         socket.emit('load_history', db.messages[chatId] || []);
-        const chat = db.chats.front ? null : db.chats.find(c => c.id === chatId);
+        const chat = db.chats.find(c => c.id === chatId);
         if (chat) {
             socket.emit('group_updated', chat);
         }
